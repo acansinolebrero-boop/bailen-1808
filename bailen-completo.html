@@ -386,6 +386,24 @@ const ALL={
   ]
 };
 
+
+// ─── UNIT IMAGE CACHE ─────────────────────────────────────
+const unitImages = {};
+function preloadUnitImages() {
+  ['esp','fra'].forEach(side => {
+    const folder = side === 'esp' ? 'España' : 'Francia';
+    ALL[side].forEach(group => {
+      group.units.forEach(([name]) => {
+        const img = new Image();
+        img.src = 'Fichas/' + folder + '/' + encodeURIComponent(name) + '.png';
+        img.onerror = () => {};
+        unitImages[name] = img;
+      });
+    });
+  });
+}
+preloadUnitImages();
+
 // ─── STATE ────────────────────────────────────────────────
 let placedUnits=[],selectedRoster=null,selectedPlaced=null;
 let movementLeft=0, reachable=[];
@@ -808,83 +826,50 @@ function drawBoard(){
     ctx.fillStyle='rgba(0,0,0,0.4)';
     ctx.fillRect(cx+2,cy+2,W,H);
 
-    // Main background
-    ctx.fillStyle=isEsp?'#c0231e':'#1a4fa0';
-    ctx.fillRect(cx,cy,W,H);
-
-    // Dimmed if moved
-    if(u.movedThisTurn){
-      ctx.fillStyle='rgba(0,0,0,0.3)';
-      ctx.fillRect(cx,cy,W,H);
-    }
-
-    // Thin inner border line (like original)
-    ctx.strokeStyle=isEsp?'rgba(255,200,0,0.5)':'rgba(255,255,255,0.4)';
-    ctx.lineWidth=0.6;
-    ctx.strokeRect(cx+1.5,cy+1.5,W-3,H-3);
-
     const sym=isEsp?'#f5c800':'#ffffff';
-    const mid=H*0.52; // vertical center of symbol area
-
-    // Unit type symbol
-    ctx.strokeStyle=sym; ctx.lineWidth=1.4;
-    ctx.lineCap='round';
-
-    const t=u.type;
-    if(t==='mando'){
-      // Flag on pole (mando style from image)
-      ctx.fillStyle=sym;
-      // Pole
-      ctx.beginPath();ctx.moveTo(cx+W*0.35,cy+H*0.28);ctx.lineTo(cx+W*0.35,cy+H*0.78);ctx.stroke();
-      // Flag
-      ctx.beginPath();ctx.moveTo(cx+W*0.35,cy+H*0.28);ctx.lineTo(cx+W*0.7,cy+H*0.36);
-      ctx.lineTo(cx+W*0.35,cy+H*0.48);ctx.closePath();ctx.fill();
-      // Star for mando
-      ctx.fillStyle=sym;ctx.font=`${W*0.2}px serif`;
-      ctx.textAlign='right';ctx.textBaseline='top';
-      ctx.fillText('★',cx+W-2,cy+2);
-    } else if(t==='art'||t==='artm'){
-      // Cannonball symbol
-      ctx.fillStyle=sym;
-      ctx.beginPath();ctx.arc(x,cy+mid,W*0.2,0,Math.PI*2);ctx.fill();
-      // Small dots around
-      ctx.beginPath();ctx.arc(x-W*0.25,cy+mid+W*0.1,W*0.07,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(x+W*0.25,cy+mid+W*0.1,W*0.07,0,Math.PI*2);ctx.fill();
-    } else if(t==='cab'||t==='drag'||t==='cor'){
-      // Crossed sabers (cavalry)
-      ctx.strokeStyle=sym;ctx.lineWidth=1.6;
-      ctx.beginPath();ctx.moveTo(cx+W*0.2,cy+H*0.3);ctx.lineTo(cx+W*0.8,cy+H*0.75);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(cx+W*0.8,cy+H*0.3);ctx.lineTo(cx+W*0.2,cy+H*0.75);ctx.stroke();
-      // Hilt guards
-      ctx.beginPath();ctx.moveTo(cx+W*0.3,cy+H*0.35);ctx.lineTo(cx+W*0.48,cy+H*0.51);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(cx+W*0.7,cy+H*0.35);ctx.lineTo(cx+W*0.52,cy+H*0.51);ctx.stroke();
+    const uImg = unitImages[u.name];
+    if(uImg && uImg.complete && uImg.naturalWidth > 0) {
+      ctx.drawImage(uImg, cx, cy, W, H);
+      if(u.movedThisTurn){ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(cx,cy,W,H);}
     } else {
-      // Crossed muskets (infantry / milicias / guardia)
-      ctx.strokeStyle=sym;ctx.lineWidth=1.5;
-      // Main cross
-      ctx.beginPath();ctx.moveTo(cx+W*0.18,cy+H*0.28);ctx.lineTo(cx+W*0.82,cy+H*0.75);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(cx+W*0.82,cy+H*0.28);ctx.lineTo(cx+W*0.18,cy+H*0.75);ctx.stroke();
-      // Decorative rings at cross center
-      ctx.strokeStyle=sym;ctx.lineWidth=0.8;
-      ctx.beginPath();ctx.arc(x,cy+mid,W*0.1,0,Math.PI*2);ctx.stroke();
-      // Bayonet tips
-      if(t==='guardia'){
-        ctx.lineWidth=1.8; // thicker for guardia
+      ctx.fillStyle=isEsp?'#c0231e':'#1a4fa0';
+      ctx.fillRect(cx,cy,W,H);
+      if(u.movedThisTurn){ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(cx,cy,W,H);}
+      ctx.strokeStyle=isEsp?'rgba(255,200,0,0.5)':'rgba(255,255,255,0.4)';
+      ctx.lineWidth=0.6;ctx.strokeRect(cx+1.5,cy+1.5,W-3,H-3);
+      const mid=H*0.52;
+      ctx.strokeStyle=sym;ctx.lineWidth=1.4;ctx.lineCap='round';
+      const t=u.type;
+      if(t==='mando'){
+        ctx.fillStyle=sym;
+        ctx.beginPath();ctx.moveTo(cx+W*0.35,cy+H*0.28);ctx.lineTo(cx+W*0.35,cy+H*0.78);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(cx+W*0.35,cy+H*0.28);ctx.lineTo(cx+W*0.7,cy+H*0.36);
+        ctx.lineTo(cx+W*0.35,cy+H*0.48);ctx.closePath();ctx.fill();
+        ctx.fillStyle=sym;ctx.font=`${W*0.2}px serif`;
+        ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText('★',cx+W-2,cy+2);
+      } else if(t==='art'||t==='artm'){
+        ctx.fillStyle=sym;ctx.beginPath();ctx.arc(x,cy+mid,W*0.2,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(x-W*0.25,cy+mid+W*0.1,W*0.07,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(x+W*0.25,cy+mid+W*0.1,W*0.07,0,Math.PI*2);ctx.fill();
+      } else if(t==='cab'||t==='drag'||t==='cor'){
+        ctx.strokeStyle=sym;ctx.lineWidth=1.6;
+        ctx.beginPath();ctx.moveTo(cx+W*0.2,cy+H*0.3);ctx.lineTo(cx+W*0.8,cy+H*0.75);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(cx+W*0.8,cy+H*0.3);ctx.lineTo(cx+W*0.2,cy+H*0.75);ctx.stroke();
+      } else {
+        ctx.strokeStyle=sym;ctx.lineWidth=1.5;
         ctx.beginPath();ctx.moveTo(cx+W*0.18,cy+H*0.28);ctx.lineTo(cx+W*0.82,cy+H*0.75);ctx.stroke();
         ctx.beginPath();ctx.moveTo(cx+W*0.82,cy+H*0.28);ctx.lineTo(cx+W*0.18,cy+H*0.75);ctx.stroke();
+        ctx.strokeStyle=sym;ctx.lineWidth=0.8;
+        ctx.beginPath();ctx.arc(x,cy+mid,W*0.1,0,Math.PI*2);ctx.stroke();
       }
+      ctx.fillStyle=isEsp?'rgba(0,0,0,0.3)':'rgba(0,0,0,0.25)';
+      ctx.fillRect(cx,cy,W,H*0.2);
+      ctx.fillStyle=sym;ctx.font=`bold ${W*0.155}px 'IM Fell English',serif`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(u.name.length>8?u.name.substring(0,8):u.name, x, cy+H*0.1);
     }
-
-    // Name strip at top
-    ctx.fillStyle=isEsp?'rgba(0,0,0,0.3)':'rgba(0,0,0,0.25)';
-    ctx.fillRect(cx,cy,W,H*0.2);
-    ctx.fillStyle=sym;
-    ctx.font=`bold ${W*0.155}px 'IM Fell English',serif`;
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(u.name.length>8?u.name.substring(0,8):u.name, x, cy+H*0.1);
-
-    // Stats bottom strip
-    ctx.fillStyle=isEsp?'rgba(0,0,0,0.3)':'rgba(0,0,0,0.25)';
+    // Stats (siempre visibles)
+    ctx.fillStyle='rgba(0,0,0,0.55)';
     ctx.fillRect(cx,cy+H*0.78,W,H*0.22);
     ctx.fillStyle=sym;
     ctx.font=`bold ${W*0.2}px 'IM Fell English',serif`;
@@ -892,7 +877,6 @@ function drawBoard(){
     ctx.fillText(u.combat, cx+W*0.08, cy+H*0.89);
     ctx.textAlign='right';
     ctx.fillText(u.move, cx+W*0.92, cy+H*0.89);
-    // Separator dot in middle
     ctx.textAlign='center';
     ctx.fillText('·', x, cy+H*0.89);
 
