@@ -221,9 +221,8 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
 
 <script>
 // ─── MAP IMAGE ────────────────────────────────────────────
-const MAP_B64 = 'mapa-bailen.svg';
-const mapImg = new Image();
-mapImg.src = MAP_B64;
+// Mapa desactivado - fondo liso
+const mapImg = null;
 mapImg.onload = () => drawBoard();
 
 // Map alignment params (tweak to align with hex grid)
@@ -235,11 +234,17 @@ const MAP_SCALE_X  = 1.08; // stretch to fit canvas width
 const MAP_SCALE_Y  = 0.98;
 
 // ─── HEX SETUP ────────────────────────────────────────────
-const HEX_SIZE=18,COLS=32,ROWS=42;
+const HEX_SIZE=40,COLS=32,ROWS=42;
 const HH=Math.sqrt(3)*HEX_SIZE,COL_W=HEX_SIZE*2*0.75;
 const canvas=document.getElementById('board'),ctx=canvas.getContext('2d');
-canvas.width=Math.ceil(COL_W*COLS+HEX_SIZE*0.5)+2;
-canvas.height=Math.ceil(HH*ROWS+HH*0.5)+2;
+const dpr=window.devicePixelRatio||1;
+const cssW=Math.ceil(COL_W*COLS+HEX_SIZE*0.5)+2;
+const cssH=Math.ceil(HH*ROWS+HH*0.5)+2;
+canvas.width=cssW*dpr;
+canvas.height=cssH*dpr;
+canvas.style.width=cssW+'px';
+canvas.style.height=cssH+'px';
+ctx.scale(dpr,dpr);
 
 // ─── TERRAIN ─────────────────────────────────────────────
 const T={PLAIN:0,MOUNTAIN:1,FOREST:2,ROAD:3,CITY:4,HOUSE:5,ZONE_F:6,ZONE_E:7};
@@ -389,13 +394,89 @@ const ALL={
 
 // ─── UNIT IMAGE CACHE ─────────────────────────────────────
 const unitImages = {};
+
+// Convierte nombre de código → nombre de archivo PNG
+function toFileName(name, side) {
+  // ── ESPAÑA: número va ANTES del nombre en los archivos ──
+  const espAbbr = {
+    'G.Valona': 'G. Valona',
+    'Drag.Reina': 'Dragones Reina',
+    'Ord.Mils': 'Ord. Militar',
+    'Ord.Mili': 'Ord. Militar',
+    'V.Cataluña': 'Cataluña',
+    'V.Ceuta': 'Ceuta',
+    'V.Cuenca': 'Cuenca',
+    'V.Bujalance': 'Bujalance',
+    'V.Granada': 'Granada',
+    'V.Jaén': 'Inf. Jaén',
+    'V.Tejas': 'Tejas',
+    'V.Trujillo': 'Trujillo',
+    'V.C.Real': 'Ciudad Real',
+    'V.Barbaste': 'Babastro',
+    'Amiguera': 'Babastro',
+    'Dupigny': 'Coupigny',
+    'Reding': 'Rending',
+  };
+
+  // ── FRANCIA: número va DESPUÉS (igual que código), con excepciones ──
+  const fraAbbr = {
+    'Pannet.': 'Pannetier',
+    'Ref.': 'Referencia',
+    'Cazad.': 'Cazadores',
+    'Art.Montada': 'Artilleria Montada',
+    'Artillería': 'Artilleria',
+  };
+  // Francia: estos llevan número ANTES del nombre en archivo
+  const fraSwap = ['B4Leg.', 'Marinos'];
+  // Casos especiales Francia sin número
+  const fraSpecial = {
+    '2B.Suizo': '2 B. Suizo',
+    'Cazadores': 'Cazadores',
+  };
+
+  let fname = name;
+
+  if (side === 'esp') {
+    // Aplicar abreviaturas España
+    for (const [abbr, full] of Object.entries(espAbbr)) {
+      if (fname.startsWith(abbr)) { fname = fname.replace(abbr, full); break; }
+    }
+    // Mover número al inicio: "Reina 1" → "1 Reina"
+    const m = fname.match(/^(.+?)\s+(\d+)$/);
+    if (m) fname = m[2] + ' ' + m[1];
+
+  } else {
+    // Casos especiales sin número
+    if (fraSpecial[fname]) return fraSpecial[fname];
+
+    // B4Leg. y Marinos: número va antes
+    for (const prefix of fraSwap) {
+      if (fname.startsWith(prefix)) {
+        const m = fname.match(/^(.+?)\s+(\d+)$/);
+        if (m) {
+          const base = prefix === 'B4Leg.' ? 'B. 4 Leg.' : 'Marinos';
+          fname = m[2] + ' ' + base;
+          return fname;
+        }
+      }
+    }
+    // Aplicar abreviaturas Francia (número queda al final)
+    for (const [abbr, full] of Object.entries(fraAbbr)) {
+      if (fname.startsWith(abbr)) { fname = fname.replace(abbr, full); break; }
+    }
+  }
+
+  return fname;
+}
+
 function preloadUnitImages() {
   ['esp','fra'].forEach(side => {
     const folder = side === 'esp' ? 'España' : 'Francia';
     ALL[side].forEach(group => {
       group.units.forEach(([name]) => {
         const img = new Image();
-        img.src = 'Fichas/' + folder + '/' + encodeURIComponent(name) + '.png';
+        const fname = toFileName(name, side);
+        img.src = 'Fichas/' + folder + '/' + encodeURIComponent(fname) + '.png';
         img.onerror = () => {};
         unitImages[name] = img;
       });
@@ -715,18 +796,11 @@ function drawVectorCounter(ctx,u,cx,cy,W,H,x,y,isEsp){
 }
 
 function drawBoard(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,cssW,cssH);
 
   // Draw map image background
-  if(mapImg.complete&&mapImg.naturalWidth>0){
-    ctx.save();
-    ctx.translate(MAP_OFFSET_X, MAP_OFFSET_Y);
-    ctx.drawImage(mapImg, 0, 0, canvas.width*MAP_SCALE_X, canvas.height*MAP_SCALE_Y);
-    ctx.restore();
-  } else {
-    ctx.fillStyle='#e8d5a3';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
+  ctx.fillStyle='#e8d5a3';
+  ctx.fillRect(0,0,cssW,cssH);
 
   // Draw hex grid overlay - transparent fill, just grid lines
   for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){
@@ -746,11 +820,11 @@ function drawBoard(){
   // Labels
 
   ctx.font=`bold ${HEX_SIZE*.62}px 'Cinzel',serif`;ctx.textAlign='center';
-  ctx.textBaseline='top';ctx.fillStyle='rgba(120,180,255,0.9)';ctx.fillText('⬆ ZONA FRANCESA',canvas.width/2,5);
-  ctx.textBaseline='bottom';ctx.fillStyle='rgba(255,130,130,0.9)';ctx.fillText('⬇ ZONA ESPAÑOLA',canvas.width/2,canvas.height-3);
+  ctx.textBaseline='top';ctx.fillStyle='rgba(120,180,255,0.9)';ctx.fillText('⬆ ZONA FRANCESA',cssW/2,5);
+  ctx.textBaseline='bottom';ctx.fillStyle='rgba(255,130,130,0.9)';ctx.fillText('⬇ ZONA ESPAÑOLA',cssW/2,cssH-3);
 
   // ── Side panel: zone labels + arrows (right edge) ──
-  const panelX = canvas.width - 2;
+  const panelX = cssW - 2;
   const midY = hexCenter(0,14).y + HH/2; // division line Y
 
   // French zone label (vertical, upper half)
@@ -779,7 +853,7 @@ function drawBoard(){
   ctx.font = `bold ${HEX_SIZE*0.62}px 'Cinzel',serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.translate(panelX - 6, midY + (canvas.height - midY)/2);
+  ctx.translate(panelX - 6, midY + (cssH - midY)/2);
   ctx.rotate(-Math.PI/2);
   ctx.fillText('Zona Española', 0, 0);
   ctx.restore();
@@ -790,26 +864,26 @@ function drawBoard(){
   ctx.font = `${HEX_SIZE*0.9}px serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('←', panelX - 6, midY + (canvas.height - midY)/2 + HEX_SIZE*1.5);
+  ctx.fillText('←', panelX - 6, midY + (cssH - midY)/2 + HEX_SIZE*1.5);
   ctx.restore();
 
   // Draw placement zone boundary lines
   if(gamePhase==='setup'&&placementPhase!=='done'){
     // French zone southern boundary (row 19)
     const fraY = hexCenter(0,14).y + HH/2;
-    ctx.beginPath();ctx.moveTo(0,fraY);ctx.lineTo(canvas.width,fraY);
+    ctx.beginPath();ctx.moveTo(0,fraY);ctx.lineTo(cssW,fraY);
     ctx.strokeStyle='rgba(100,150,255,0.6)';ctx.lineWidth=2;ctx.setLineDash([8,4]);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle='rgba(100,150,255,0.8)';ctx.font=`bold ${HEX_SIZE*0.6}px 'Cinzel',serif`;
     ctx.textAlign='center';ctx.textBaseline='bottom';
-    ctx.fillText('▲ ZONA FRANCESA',canvas.width/2,fraY-2);
+    ctx.fillText('▲ ZONA FRANCESA',cssW/2,fraY-2);
 
     // Spanish zone northern boundary (row 21)
     const espY = hexCenter(0,14).y + HH/2;
-    ctx.beginPath();ctx.moveTo(0,espY);ctx.lineTo(canvas.width,espY);
+    ctx.beginPath();ctx.moveTo(0,espY);ctx.lineTo(cssW,espY);
     ctx.strokeStyle='rgba(255,100,100,0.6)';ctx.lineWidth=2;ctx.setLineDash([8,4]);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle='rgba(255,100,100,0.8)';ctx.font=`bold ${HEX_SIZE*0.6}px 'Cinzel',serif`;
     ctx.textAlign='center';ctx.textBaseline='top';
-    ctx.fillText('▼ ZONA ESPAÑOLA',canvas.width/2,espY+2);
+    ctx.fillText('▼ ZONA ESPAÑOLA',cssW/2,espY+2);
   }
 
   // Units - SVG-style vector counters matching Gemini design
@@ -1122,8 +1196,8 @@ function applyZoom(){
   canvas.style.transform=`scale(${zoomScale})`;
   // Adjust wrap scroll area to match scaled canvas
   const wrap=document.getElementById('board-wrap');
-  canvas.style.marginBottom = `${canvas.height*(zoomScale-1)}px`;
-  canvas.style.marginRight  = `${canvas.width*(zoomScale-1)}px`;
+  canvas.style.marginBottom = `${cssH*(zoomScale-1)}px`;
+  canvas.style.marginRight  = `${cssW*(zoomScale-1)}px`;
   document.getElementById('zoom-level').textContent=Math.round(zoomScale*100)+'%';
 }
 function zoomIn(){zoomScale=Math.min(ZOOM_MAX,+(zoomScale+ZOOM_STEP).toFixed(2));applyZoom();}
