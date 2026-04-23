@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bailén 1808</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#1a0f00;color:#e8d5a3;font-family:'IM Fell English',serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+#header{text-align:center;padding:6px;background:linear-gradient(180deg,#2a1500,#1a0f00);border-bottom:2px solid #8b6914;flex-shrink:0;}
+h1{font-family:'Cinzel',serif;font-size:1.4em;color:#d4a017;letter-spacing:4px;}
+.subtitle{font-size:0.7em;color:#a07840;letter-spacing:2px;}
+#main{display:flex;flex:1;overflow:hidden;}
+#roster{width:195px;flex-shrink:0;background:#1e1000;border-right:2px solid #8b6914;overflow-y:auto;}
+.roster-header{font-family:'Cinzel',serif;font-size:0.72em;color:#d4a017;padding:5px 8px;border-bottom:1px solid #8b6914;letter-spacing:2px;position:sticky;top:0;z-index:1;}
+.roster-header.esp{background:#3a0a0a;}.roster-header.fra{background:#0a0a3a;}
+.unit-type-label{font-size:0.6em;color:#806040;padding:3px 8px 1px;font-family:'Cinzel',serif;letter-spacing:1px;}
+.unit-btn{display:flex;align-items:center;gap:5px;padding:3px 8px;cursor:pointer;border:none;background:none;width:100%;text-align:left;color:#e8d5a3;font-family:'IM Fell English',serif;font-size:0.73em;border-bottom:1px solid rgba(139,105,20,0.12);transition:background 0.15s;}
+.unit-btn:hover{background:rgba(212,160,23,0.12);}
+.unit-btn.selected-unit{background:rgba(255,220,0,0.18);color:#ffdd00;}
+.unit-btn.placed{opacity:0.38;}
+.unit-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,0.35);}
+.unit-dot.esp{background:#cc3333;}.unit-dot.fra{background:#3355cc;}
+.unit-stats{font-size:0.63em;color:#806040;margin-left:auto;}
+#board-wrap{flex:1;overflow:auto;position:relative;}
+canvas{display:block;cursor:crosshair;transform-origin:top left;}
+#zoom-controls{position:sticky;top:6px;left:6px;z-index:10;display:flex;gap:4px;pointer-events:all;}
+.zoom-btn{background:#2a1500;border:1px solid #8b6914;color:#d4a017;width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:1.1em;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;transition:background 0.15s;}
+.zoom-btn:hover{background:#5a3800;}
+#zoom-level{background:#1a0f00;border:1px solid #5a3800;color:#a07840;padding:2px 6px;border-radius:4px;font-size:0.68em;display:flex;align-items:center;font-family:'Cinzel',serif;}
+#controls{width:178px;flex-shrink:0;background:#1e1000;border-left:2px solid #8b6914;overflow-y:auto;display:flex;flex-direction:column;}
+.panel{padding:7px;border-bottom:1px solid #3a2200;}
+.panel h3{font-family:'Cinzel',serif;font-size:0.72em;color:#d4a017;margin-bottom:5px;letter-spacing:2px;}
+.btn{background:#3a2200;border:1px solid #8b6914;color:#d4a017;padding:4px 8px;border-radius:3px;cursor:pointer;font-family:'IM Fell English',serif;font-size:0.73em;width:100%;margin-top:3px;transition:background 0.15s;text-align:left;}
+.btn:hover{background:#5a3800;}.btn.active-btn{background:#6a4000;border-color:#d4a017;}
+#turn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;}
+.tc{aspect-ratio:1;background:#2a1500;border:1px solid #5a3800;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:0.68em;color:#806040;}
+.tc.active{background:#d4a017;color:#1a0f00;font-weight:bold;}.tc.done{background:#3a2000;color:#5a3800;}
+.leg{display:flex;align-items:center;gap:4px;margin:2px 0;font-size:0.67em;}
+.leg-c{width:13px;height:10px;border:1px solid rgba(255,255,255,0.12);border-radius:1px;flex-shrink:0;}
+table{width:100%;border-collapse:collapse;font-size:0.64em;}
+th,td{border:1px solid #5a3800;padding:2px 3px;text-align:center;}
+th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
+/* Dado visual */
+.die-box{display:inline-block;width:48px;height:48px;background:#f5f0e0;border:3px solid #333;border-radius:8px;position:relative;margin:4px;}
+.die-dot{width:10px;height:10px;background:#222;border-radius:50%;position:absolute;}
+/* Combat overlay */
+#combat-overlay{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#2a1500;border:2px solid #d4a017;border-radius:6px;padding:20px;z-index:100;min-width:300px;text-align:center;box-shadow:0 0 40px rgba(0,0,0,0.8);}
+#combat-overlay h2{font-family:'Cinzel',serif;color:#d4a017;margin-bottom:10px;font-size:1em;}
+#dice-row{display:flex;justify-content:center;align-items:center;gap:16px;margin:10px 0;}
+.die-label{font-size:0.75em;color:#a07840;}
+#combat-result{font-size:0.85em;line-height:1.6;margin:8px 0;}
+#info{padding:4px 10px;font-size:0.7em;color:#a07840;border-top:1px solid #8b6914;background:#1a0f00;flex-shrink:0;min-height:22px;}
+#victory-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:300;align-items:center;justify-content:center;}
+#handover-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:250;align-items:center;justify-content:center;flex-direction:column;}
+#handover-overlay h2{font-family:'Cinzel',serif;font-size:1.6em;color:#d4a017;letter-spacing:4px;margin-bottom:16px;}
+#handover-overlay p{font-size:0.9em;color:#a07840;margin-bottom:24px;text-align:center;line-height:1.7;}
+#victory-box{background:#2a1500;border:3px solid #d4a017;border-radius:10px;padding:40px;text-align:center;max-width:380px;}
+#victory-box h2{font-family:'Cinzel',serif;font-size:1.8em;color:#d4a017;margin-bottom:12px;letter-spacing:4px;}
+#victory-reason{font-size:0.9em;color:#e8d5a3;line-height:1.7;margin:12px 0;}
+/* Phase indicator */
+#phase-bar{padding:5px 10px;text-align:center;font-family:'Cinzel',serif;font-size:0.78em;letter-spacing:2px;flex-shrink:0;border-bottom:2px solid #8b6914;}
+#phase-bar.esp{background:#3a0a0a;color:#ffaaaa;}
+#phase-bar.fra{background:#0a0a3a;color:#aaaaff;}
+#phase-bar.setup{background:#2a1800;color:#d4a017;}
+.phase-name{font-weight:bold;font-size:1.1em;}
+/* Startup overlay */
+#startup-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,5,0,0.95);z-index:200;display:flex;align-items:center;justify-content:center;}
+#startup-box{background:#2a1500;border:2px solid #d4a017;border-radius:8px;padding:30px;text-align:center;min-width:340px;}
+#startup-box h2{font-family:'Cinzel',serif;color:#d4a017;font-size:1.3em;margin-bottom:16px;letter-spacing:3px;}
+.startup-section{margin:12px 0;padding:12px;background:#1a0f00;border-radius:4px;border:1px solid #5a3800;}
+.startup-section h3{font-family:'Cinzel',serif;font-size:0.8em;color:#a07840;margin-bottom:8px;}
+.roll-result{font-size:1.8em;font-weight:bold;min-height:36px;margin:6px 0;}
+.roll-result.esp{color:#ff6666;}
+.roll-result.fra{color:#6688ff;}
+</style>
+</head>
+<body>
+<div id="header">
+  <h1>⚔ BAILÉN 1808 ⚔</h1>
+  <div class="subtitle">19 de julio · Batalla de tablero</div>
+</div>
+<!-- Startup overlay -->
+<div id="startup-overlay">
+  <div id="startup-box">
+    <h2>⚔ BAILÉN 1808 ⚔</h2>
+    <p style="font-size:0.8em;color:#a07840;margin-bottom:16px">Primero colocad las fichas en vuestra zona.<br>Luego tirad el dado para ver quién empieza.</p>
+    <div class="startup-section">
+      <h3>🔴 ESPAÑA — Tirada de inicio</h3>
+      <div class="roll-result esp" id="esp-roll">—</div>
+      <canvas id="die-esp-start" width="52" height="52" style="margin:4px auto;display:block;"></canvas>
+      <button class="btn" onclick="rollStart('esp')" id="btn-roll-esp">Tirar dado</button>
+    </div>
+    <div class="startup-section">
+      <h3>🔵 FRANCIA — Tirada de inicio</h3>
+      <div class="roll-result fra" id="fra-roll">—</div>
+      <canvas id="die-fra-start" width="52" height="52" style="margin:4px auto;display:block;"></canvas>
+      <button class="btn" onclick="rollStart('fra')" id="btn-roll-fra">Tirar dado</button>
+    </div>
+    <div id="startup-result" style="margin-top:12px;font-size:0.85em;color:#d4a017;min-height:24px;"></div>
+    <button class="btn" id="btn-start-game" onclick="startGame()" style="display:none;margin-top:10px;font-size:0.85em;padding:8px;">▶ Comenzar partida</button>
+  </div>
+</div>
+
+<!-- Phase bar -->
+<div id="phase-bar" class="setup">
+  <span id="phase-player">FASE DE COLOCACIÓN</span> · <span class="phase-name" id="phase-name"></span>
+</div>
+
+<div id="main">
+  <div id="roster">
+    <div class="roster-header esp">🔴 ESPAÑA</div>
+    <div id="esp-list"></div>
+    <div class="roster-header fra">🔵 FRANCIA</div>
+    <div id="fra-list"></div>
+  </div>
+  <div id="board-wrap">
+    <div id="zoom-controls">
+      <button class="zoom-btn" onclick="zoomIn()" title="Acercar">+</button>
+      <button class="zoom-btn" onclick="zoomOut()" title="Alejar">−</button>
+      <button class="zoom-btn" onclick="zoomReset()" title="Restablecer">↺</button>
+      <div id="zoom-level">100%</div>
+    </div>
+    <canvas id="board"></canvas>
+  </div>
+  <div id="controls">
+    <div class="panel">
+      <h3>TURNO</h3>
+      <div id="turn-grid"></div>
+      <div style="text-align:center;margin-top:4px;font-size:0.7em;color:#a07840">Turno <span id="cur-turn" style="color:#d4a017;font-weight:bold">1</span>/12</div>
+      <button class="btn" onclick="advanceTurn()">Siguiente →</button>
+    </div>
+    <div class="panel">
+      <h3>FASE ACTUAL</h3>
+      <div id="phase-panel-info" style="font-size:0.72em;color:#d4a017;margin-bottom:6px;line-height:1.5;min-height:36px;"></div>
+      <button class="btn" id="btn-place"  onclick="setMode('place')" style="display:none">📌 Colocar</button>
+      <button class="btn" id="btn-move"   onclick="setMode('move')"  style="display:none">🚶 Mover</button>
+      <button class="btn" id="btn-combat" onclick="setMode('combat')" style="display:none">⚔ Combate</button>
+      <button class="btn" id="btn-bomb"   onclick="setMode('bombard')" style="display:none">💣 Bombardeo</button>
+      <button class="btn" id="btn-del"    onclick="setMode('delete')" style="display:none">🗑 Eliminar</button>
+      <div style="font-size:0.65em;color:#806040;margin-top:4px">Modo: <span id="mode-txt">—</span></div>
+      <div id="combat-attackers" style="font-size:0.64em;color:#ffdd00;margin-top:3px;min-height:12px;"></div>
+      <button class="btn" id="btn-next-phase" onclick="nextPhase()" style="margin-top:8px;background:#1a3a1a;border-color:#4a8a4a;color:#aaffaa;">Siguiente fase →</button>
+    </div>
+    <div class="panel">
+      <h3>DADO ESPECIAL</h3>
+      <div style="font-size:0.65em;color:#a07840;line-height:1.5">
+        Sin 1 ni 6:<br>
+        <b style="color:#d4a017">2 · 3 · 3 · 4 · 4 · 5</b><br><br>
+        <b style="color:#d4a017">⚔ Combate:</b> dado × combate.<br>
+        Mayor valor gana. El perdedor sale del juego.<br><br>
+        <b style="color:#d4a017">💣 Bombardeo:</b> artillería → objetivo 2-12 hexs.
+      </div>
+    </div>
+    <div class="panel">
+      <h3>BOMBARDEO</h3>
+      <table>
+        <tr><th>Dist.</th><th>Llano</th><th>Ciudad</th></tr>
+        <tr><td>2-4</td><td>≥3</td><td>3-4</td></tr>
+        <tr><td>5-8</td><td>≥4</td><td>≥3</td></tr>
+        <tr><td>9-12</td><td>5</td><td>—</td></tr>
+      </table>
+      <div style="font-size:0.63em;color:#806040;margin-top:3px">Monte +1 def. infantería</div>
+    </div>
+    <div class="panel">
+      <h3>LEYENDA</h3>
+      <div class="leg"><div class="leg-c" style="background:#c8a050"></div>Llanura</div>
+      <div class="leg"><div class="leg-c" style="background:#8b6535"></div>Monte (+1 def.inf.)</div>
+      <div class="leg"><div class="leg-c" style="background:#6b8c3a"></div>Vegetación</div>
+      <div class="leg"><div class="leg-c" style="background:#b8860b"></div>Camino (+1 mov.)</div>
+      <div class="leg"><div class="leg-c" style="background:#cd5c1a"></div>Bailén (+1 comb.)</div>
+      <div class="leg"><div class="leg-c" style="background:#d4a84b"></div>Casa (+1 comb.)</div>
+      <div class="leg"><div class="leg-c" style="background:#4060cc;opacity:0.7"></div>Hex alcanzable</div>
+    </div>
+    <div class="panel">
+      <h3>VICTORIA</h3>
+      <div style="font-size:0.65em;color:#a07840;line-height:1.4">· Eliminar los 3 mandos enemigos<br>· O tener el doble de fichas<br>· Turno 12: más fichas gana</div>
+      <button class="btn" onclick="checkVictory()">Comprobar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Combat overlay -->
+<div id="combat-overlay">
+  <h2 id="overlay-title">⚔ COMBATE</h2>
+  <div id="dice-row">
+    <div>
+      <div class="die-label" id="atk-label">Ataque</div>
+      <canvas id="die-atk" width="52" height="52"></canvas>
+      <div style="font-size:0.8em;color:#a07840;" id="atk-calc"></div>
+    </div>
+    <div style="font-size:1.5em;color:#d4a017;">VS</div>
+    <div>
+      <div class="die-label" id="def-label">Defensa</div>
+      <canvas id="die-def" width="52" height="52"></canvas>
+      <div style="font-size:0.8em;color:#a07840;" id="def-calc"></div>
+    </div>
+  </div>
+  <div id="combat-result"></div>
+  <button class="btn" style="width:auto;padding:6px 20px;margin-top:10px" onclick="closeCombatOverlay()">Cerrar</button>
+</div>
+
+<!-- Handover overlay (screen between placement turns) -->
+<div id="handover-overlay">
+  <h2 id="handover-title">CAMBIO DE MANDO</h2>
+  <p id="handover-msg"></p>
+  <button class="btn" style="width:auto;padding:10px 30px;font-size:0.9em;" onclick="handoverConfirm()">Estoy listo →</button>
+</div>
+
+<!-- Victory overlay -->
+<div id="victory-overlay">
+  <div id="victory-box">
+    <h2 id="victory-title">VICTORIA</h2>
+    <div id="victory-reason"></div>
+    <button class="btn" style="width:auto;padding:8px 24px;margin-top:16px;font-size:0.9em" onclick="document.getElementById('victory-overlay').style.display='none'">Cerrar</button>
+  </div>
+</div>
+
+<div id="info">Selecciona una unidad del panel izquierdo y haz clic en el tablero para colocarla.</div>
+
+<script>
+// ─── MAP IMAGE ────────────────────────────────────────────
+const MAP_B64 = null;
+// mapa eliminado
+
+// Map alignment params (tweak to align with hex grid)
+// Bailén city center is at approx col=14, row=25 in hex grid
+// In the map image: roughly x=0.50, y=0.558 (normalized)
+const MAP_OFFSET_X = -30;  // px offset
+const MAP_OFFSET_Y = 20;
+const MAP_SCALE_X  = 1.08; // stretch to fit canvas width
+const MAP_SCALE_Y  = 0.98;
+
+// ─── HEX SETUP ────────────────────────────────────────────
+const HEX_SIZE=55,COLS=32,ROWS=42;
+const HH=Math.sqrt(3)*HEX_SIZE,COL_W=HEX_SIZE*2*0.75;
+const canvas=document.getElementById('board'),ctx=canvas.getContext('2d');
+const dpr=window.devicePixelRatio||1;
+const cssW=Math.ceil(COL_W*COLS+HEX_SIZE*0.5)+2;
+const cssH=Math.ceil(HH*ROWS+HH*0.5)+2;
+canvas.width=cssW*dpr;
+canvas.height=cssH*dpr;
+canvas.style.width=cssW+'px';
+canvas.style.height=cssH+'px';
+ctx.scale(dpr,dpr);
+
+// ─── TERRAIN ─────────────────────────────────────────────
+const T={PLAIN:0,MOUNTAIN:1,FOREST:2,ROAD:3,CITY:4,HOUSE:5,ZONE_F:6,ZONE_E:7};
+const TC={0:'#c8a050',1:'#8b6535',2:'#6b8c3a',3:'#b8860b',4:'#cd5c1a',5:'#d4a84b',6:'#3a5a8a',7:'#8a3a3a'};
+const TS={0:'#a08030',1:'#6b4520',2:'#4a6a2a',3:'#a07010',4:'#9b3c0a',5:'#c09030',6:'#2a4a7a',7:'#7a2a2a'};
+
+function buildTerrain(){
+  const t=Array.from({length:ROWS},(_,r)=>Array.from({length:COLS},(_,c)=>{
+    if(r<4)return T.ZONE_F;if(r>=ROWS-4)return T.ZONE_E;return T.PLAIN;
+  }));
+  const s=(arr,v)=>arr.forEach(([r,c])=>{if(r>=0&&r<ROWS&&c>=0&&c<COLS)t[r][c]=v;});
+  s([[8,4],[8,5],[9,4],[9,5],[9,6],[10,5],[10,6],[11,5],[11,6],[12,6],[12,7],[13,6],[13,7],[14,7],[15,7],[16,7],[16,8],[17,8],[18,8],[19,8],[20,7],[20,8],[21,7],[22,7],[5,5],[6,5],[6,6],[7,5],[7,6]],T.MOUNTAIN);
+  s([[5,22],[5,23],[6,22],[6,23],[7,22],[7,23],[7,24],[8,23],[8,24],[9,24],[9,25],[10,24],[10,25],[11,25],[12,25],[13,24],[13,25],[14,24],[15,23],[15,24],[16,23],[17,22],[17,23],[18,22],[19,21],[19,22],[20,21],[21,20],[22,19]],T.MOUNTAIN);
+  s([[34,6],[34,7],[35,6],[35,7],[36,6],[36,7],[37,7],[38,7],[38,8],[39,8],[39,9],[40,9],[32,4],[33,4],[33,5],[34,5]],T.MOUNTAIN);
+  s([[10,8],[10,9],[11,8],[11,9],[12,8],[12,9],[13,8],[13,9],[14,8],[14,9],[15,8],[15,9],[10,10],[11,10],[12,10],[13,10],[14,10],[15,10],[16,9],[16,10],[8,11],[9,11],[10,11],[11,11],[12,11],[13,11],[8,12],[9,12],[10,12],[25,8],[26,8],[27,8],[28,8],[25,9],[26,9],[27,9],[26,10],[27,10],[28,9],[30,5],[31,5],[32,5],[30,6],[31,6],[32,6],[33,6],[33,7]],T.FOREST);
+  for(let r=4;r<ROWS-4;r++)if(t[r][14]===T.PLAIN)t[r][14]=T.ROAD;
+  for(let c=4;c<COLS-4;c++)if(t[21][c]===T.PLAIN)t[21][c]=T.ROAD;
+  [[22,16],[23,17],[24,17],[25,18],[26,19],[27,19],[28,20],[29,21]].forEach(([r,c])=>{if(t[r][c]===T.PLAIN)t[r][c]=T.ROAD;});
+  [[24,13],[24,14],[25,13],[25,14],[25,15],[26,13],[26,14],[26,15],[27,14],[27,15]].forEach(([r,c])=>{t[r][c]=T.CITY;});
+  [[12,13],[18,10],[20,18],[15,19],[30,12],[33,16],[8,18],[29,17]].forEach(([r,c])=>{if(t[r][c]===T.PLAIN)t[r][c]=T.HOUSE;});
+  return t;
+}
+const terrain=buildTerrain();
+
+// ─── HEX UTILS ────────────────────────────────────────────
+function hexCenter(col,row){return{x:col*COL_W+HEX_SIZE+1,y:row*HH+(col%2===1?HH/2:0)+HH/2+1};}
+function drawHex(cx,cy,sz,fill,stroke,alpha=1){
+  ctx.globalAlpha=alpha;ctx.beginPath();
+  for(let i=0;i<6;i++){const a=Math.PI/3*i;ctx.lineTo(cx+sz*Math.cos(a),cy+sz*Math.sin(a));}
+  ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=0.6;ctx.stroke();ctx.globalAlpha=1;
+}
+function hexNeighbors(col,row){
+  const odd=col%2===1;
+  const dirs=odd?[[-1,0],[-1,1],[0,1],[1,0],[1,1],[0,-1]]:[[-1,-1],[-1,0],[0,1],[1,0],[1,-1],[0,-1]];
+  return dirs.map(([dc,dr])=>[col+dc,row+dr]).filter(([c,r])=>c>=0&&r>=0&&c<COLS&&r<ROWS);
+}
+function hexDist(c1,r1,c2,r2){
+  function cube(col,row){const x=col,z=row-(col-(col&1))/2;return[x,-x-z,z];}
+  const[ax,ay,az]=cube(c1,r1),[bx,by,bz]=cube(c2,r2);
+  return Math.max(Math.abs(ax-bx),Math.abs(ay-by),Math.abs(az-bz));
+}
+// Devuelve true si (col,row) está en la ZoC de alguna unidad enemiga de 'side'
+function inEnemyZoC(col,row,side){
+  return placedUnits.some(u=>
+    u.side!==side &&
+    hexNeighbors(u.col,u.row).some(([nc,nr])=>nc===col&&nr===row)
+  );
+}
+// Alias para usar dentro de reachableHexes (misma lógica)
+function inEnemyZoCStatic(col,row,side){
+  return placedUnits.some(u=>
+    u.side!==side &&
+    hexNeighbors(u.col,u.row).some(([nc,nr])=>nc===col&&nr===row)
+  );
+}
+
+function pixelToHex(px,py){
+  let bc=-1,br=-1,bd=Infinity;
+  for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){const{x,y}=hexCenter(c,r),d=Math.hypot(px-x,py-y);if(d<bd){bd=d;bc=c;br=r;}}
+  return bd<HEX_SIZE*1.1?[bc,br]:null;
+}
+
+// Movimiento cost por terreno
+function moveCost(col,row){
+  const t=terrain[row][col];
+  if(t===T.MOUNTAIN||t===T.FOREST)return 2; // montaña cuesta 2 puntos
+  return 1;
+}
+
+// Hexágonos alcanzables con N puntos de movimiento desde (sc,sr)
+function reachableHexes(sc,sr,points,side=''){
+  const currentSide=side;
+  const visited=new Map();
+  visited.set(`${sc},${sr}`,points);
+  const queue=[[sc,sr,points]];
+  while(queue.length){
+    const[c,r,rem]=queue.shift();
+    for(const[nc,nr]of hexNeighbors(c,r)){
+      const key=`${nc},${nr}`;
+      const cost=moveCost(nc,nr);
+      const left=rem-cost;
+      if(left<0)continue;
+      const occ=placedUnits.find(u=>u.col===nc&&u.row===nr);
+      if(occ)continue; // bloqueado
+      if(!visited.has(key)||visited.get(key)<left){
+        visited.set(key,left);
+        // Si este hex está en ZoC enemiga, lo marcamos como alcanzable pero no expandimos desde él
+        if(!inEnemyZoCStatic(nc,nr,currentSide)){
+          queue.push([nc,nr,left]);
+        }
+      }
+    }
+  }
+  visited.delete(`${sc},${sr}`);
+  return [...visited.keys()].map(k=>{const[c,r]=k.split(',').map(Number);return[c,r];});
+}
+
+// ─── DIE ─────────────────────────────────────────────────
+const DIE_FACES=[2,3,3,4,4,5];
+// Dot positions per face value (on a 52x52 canvas)
+const DOT_POS={
+  2:[[13,13],[39,39]],
+  3:[[13,13],[26,26],[39,39]],
+  4:[[13,13],[39,13],[13,39],[39,39]],
+  5:[[13,13],[39,13],[26,26],[13,39],[39,39]]
+};
+function rollDie(){return DIE_FACES[Math.floor(Math.random()*6)];}
+function drawDie(canvasId,value){
+  const dc=document.getElementById(canvasId),dx=dc.getContext('2d');
+  dc.width=52;dc.height=52;
+  // background
+  dx.fillStyle='#f5f0e0';dx.beginPath();dx.roundRect(2,2,48,48,6);dx.fill();
+  dx.strokeStyle='#555';dx.lineWidth=2;dx.stroke();
+  // dots
+  dx.fillStyle='#111';
+  const pos=DOT_POS[value]||[];
+  pos.forEach(([x,y])=>{dx.beginPath();dx.arc(x,y,5,0,Math.PI*2);dx.fill();});
+}
+
+// ─── UNIT DATA ────────────────────────────────────────────
+const ICONS={mando:'★',guardia:'✚',inf:'✖',mil:'⚑',art:'●',artm:'●',cor:'⚜',drag:'✦',cab:'✦'};
+const TLABELS={mando:'MANDO',guardia:'INF. GUARDIA',inf:'INFANTERÍA',mil:'MILICIAS',art:'ARTILLERÍA',artm:'ART. MONTADA',cor:'CORACEROS',drag:'DRAGONES',cab:'CABALLERÍA'};
+const INF_TYPES=['guardia','inf','mil'];
+
+const ALL={
+  esp:[
+    {type:'mando',units:[['Castaños',4,5],['Reding',4,5],['Dupigny',4,5]]},
+    {type:'guardia',units:[['Reina 1',4,3],['Reina 2',4,3],['Reina 3',4,3],['G.Valona 1',4,3],['G.Valona 2',4,3],['G.Valona 3',4,3],['Farnesio 1',3,3]]},
+    {type:'inf',units:[['Amiguera',3,3],['Jaén 1',3,3],['Jaén 2',3,3],['Jaén 3',3,3],['Borbón 1',3,3],['Borbón 2',3,3],['Borbón 3',3,3],['Suizo 1',3,3],['Suizo 2',3,3],['Suizo 3',3,3],['Corona 1',3,3],['Corona 2',3,3],['Corona 3',3,3],['Irlanda 1',3,3],['Irlanda 2',3,3],['Irlanda 3',3,3],['Farnesio 2',3,3],['Farnesio 3',3,3]]},
+    {type:'mil',units:[['V.Cataluña 1',2,3],['V.Cataluña 2',2,3],['V.Ceuta 1',2,3],['V.Ceuta 2',2,3],['V.Cuenca 1',2,3],['V.Cuenca 2',2,3],['V.Bujalance 1',2,3],['V.Bujalance 2',2,3],['V.Granada 1',2,3],['V.Granada 2',2,3],['V.Jaén 1',2,3],['V.Jaén 2',2,3],['V.Tejas 1',2,3],['V.Tejas 2',2,3],['V.Trujillo 1',2,3],['V.Trujillo 2',2,3],['V.C.Real 1',2,3],['V.C.Real 2',2,3],['V.Barbaste',2,3],['V.Cuenca 3',2,3],['V.Jaén 3',2,3],['V.Tejas 3',2,3],['V.Trujillo 3',2,3],['V.C.Real 3',2,3]]},
+    {type:'art',units:[['Artillería 1',4,3],['Artillería 2',4,3],['Artillería 3',2,3],['Artillería 4',2,3]]},
+    {type:'drag',units:[['Numancia 1',6,3],['Numancia 2',6,3],['Drag.Reina 1',5,3],['Drag.Reina 2',5,3],['Ord.Mils 1',6,3],['Ord.Mils 2',6,3],['Ord.Mils 3',6,3],['Ord.Mils 4',6,3],['Martesa 1',5,3],['Martesa 2',5,3],['Ord.Mili 1',2,3],['Ord.Mili 2',2,3]]},
+    {type:'cab',units:[['España 1',5,3],['España 2',5,3],['Jerez 1',5,3],['Jerez 2',5,3],['Olivenza 1',5,3],['Olivenza 2',5,3],['Utrera 1',5,3],['Utrera 2',5,3],['Clavería 1',5,3],['Clavería 2',5,3]]},
+  ],
+  fra:[
+    {type:'mando',units:[['Dupont',4,5],['Barbou',4,5],['Fresia',4,5]]},
+    {type:'guardia',units:[['B4Leg. 1',4,3],['B4Leg. 2',4,3],['B4Leg. 3',4,3],['B4Leg. 4',4,3],['Marinos 1',3,3],['Marinos 2',3,3],['Marinos 3',3,3],['2B.Suizo',3,3]]},
+    {type:'inf',units:[['Schram 1',3,3],['Schram 2',3,3],['Schram 3',3,3],['Schram 4',3,3],['Schram 5',3,3],['Schram 6',3,3],['Schram 7',3,3],['Schram 8',3,3],['Schram 9',3,3],['Schram 10',3,3],['Schram 11',3,3],['Schram 12',3,3],['Pannet. 1',3,3],['Pannet. 2',3,3],['Pannet. 3',3,3],['Pannet. 4',3,3],['Pannet. 5',3,3],['Pannet. 6',3,3],['Pannet. 7',3,3],['Pannet. 8',3,3],['Pannet. 9',3,3],['Pannet.10',3,3],['Pannet.11',3,3],['Pannet.12',3,3],['Ref. 1',3,3],['Ref. 2',3,3],['Ref. 3',3,3],['Ref. 4',3,3],['Ref. 5',3,3],['Ref. 6',3,3],['Ref. 7',3,3],['Ref. 8',3,3],['Ref. 9',3,3],['Cazadores',3,3]]},
+    {type:'art',units:[['Artillería 1',3,4],['Artillería 2',4,4],['Artillería 3',3,4],['Artillería 4',4,4]]},
+    {type:'artm',units:[['Art.Montada',2,4]]},
+    {type:'cor',units:[['Coraceros 1',5,3],['Coraceros 2',5,3],['Coraceros 3',5,3],['Coraceros 4',5,3]]},
+    {type:'drag',units:[['Dragones 1',6,3],['Dragones 2',6,3],['Dragones 3',6,3],['Dragones 4',6,3],['Dragones 5',6,3]]},
+    {type:'cab',units:[['Cazad. 1',5,3],['Cazad. 2',5,3],['Cazad. 3',5,3],['Cazad. 4',5,3],['Cazad. 5',5,3],['Cazad. 6',5,3],['Cazad. 7',5,3],['Cazad. 8',5,3]]},
+  ]
+};
+
+
+// ─── UNIT IMAGE CACHE ─────────────────────────────────────
+const unitImages = {};
+function toFileName(name, side) {
+  const espAbbr = {
+    'G.Valona': 'G. Valona', 'Drag.Reina': 'Dragones Reina',
+    'Ord.Mils': 'Ord. Militar', 'Ord.Mili': 'Ord. Militar',
+    'V.Cataluña': 'Cataluña', 'V.Ceuta': 'Ceuta', 'V.Cuenca': 'Cuenca',
+    'V.Bujalance': 'Bujalance', 'V.Granada': 'Granada', 'V.Jaén': 'Inf. Jaén',
+    'V.Tejas': 'Tejas', 'V.Trujillo': 'Trujillo', 'V.C.Real': 'Ciudad Real',
+    'V.Barbaste': 'Babastro', 'Amiguera': 'Babastro',
+    'Dupigny': 'Coupigny', 'Reding': 'Rending',
+  };
+  const fraSpecial = {'2B.Suizo': '2 B. Suizo'};
+  const fraAbbr = {
+    'Pannet.': 'Pannetier', 'Ref.': 'Referencia',
+    'Cazad.': 'Cazadores', 'Art.Montada': 'Artilleria Montada',
+    'Artillería': 'Artilleria',
+  };
+  let fname = name;
+  if (side === 'esp') {
+    for (const [a,f] of Object.entries(espAbbr)) {
+      if (fname.startsWith(a)) { fname = fname.replace(a, f); break; }
+    }
+    const m = fname.match(/^(.+?)\s+(\d+)$/);
+    if (m) fname = m[2] + ' ' + m[1];
+  } else {
+    if (fraSpecial[fname]) return fraSpecial[fname];
+    if (fname.startsWith('B4Leg.')) {
+      const m = fname.match(/^B4Leg\.\s*(\d+)$/);
+      return m ? m[1] + ' B. 4 Leg.' : fname;
+    }
+    if (fname.startsWith('Marinos')) {
+      const m = fname.match(/^Marinos\s+(\d+)$/);
+      return m ? m[1] + ' marinos' : fname;
+    }
+    for (const [a,f] of Object.entries(fraAbbr)) {
+      if (fname.startsWith(a)) { fname = fname.replace(a, f); break; }
+    }
+  }
+  return fname;
+}
+function preloadUnitImages() {
+  ['esp','fra'].forEach(side => {
+    const folder = side === 'esp' ? 'España' : 'Francia';
+    ALL[side].forEach(group => {
+      group.units.forEach(([name]) => {
+        const img = new Image();
+        img.src = 'Fichas/' + folder + '/' + encodeURIComponent(toFileName(name, side)) + '.png';
+        img.onerror = () => {};
+        unitImages[name] = img;
+      });
+    });
+  });
+}
+preloadUnitImages();
+
+// ─── STATE ────────────────────────────────────────────────
+let placedUnits=[],selectedRoster=null,selectedPlaced=null;
+let movementLeft=0, reachable=[];
+let combatAttackers=[],mode='place',currentTurn=1,idCounter=0;
+const mandosPlaced={esp:0,fra:0}; // track mandos ever placed per side
+let gameOver=false;
+
+// Phase system
+let gamePhase='setup';
+let firstPlayer='esp';
+let startRolls={esp:null,fra:null};
+let placementPhase='esp'; // 'esp' | 'fra' | 'done'
+
+const PHASE_ORDER=['p1-bombard','p1-move','p1-combat','p2-bombard','p2-move','p2-combat'];
+const PHASE_LABELS={
+  'setup':'Colocación de unidades',
+  'p1-bombard':'💣 Bombardeo',
+  'p1-move':'🚶 Movimiento',
+  'p1-combat':'⚔ Combate',
+  'p2-bombard':'💣 Bombardeo',
+  'p2-move':'🚶 Movimiento',
+  'p2-combat':'⚔ Combate',
+};
+const PHASE_MODES={
+  'setup':'place',
+  'p1-bombard':'bombard','p1-move':'move','p1-combat':'combat',
+  'p2-bombard':'bombard','p2-move':'move','p2-combat':'combat',
+};
+function phasePlayer(ph){
+  if(ph==='setup')return null;
+  const isP1=ph.startsWith('p1');
+  return isP1?firstPlayer:(firstPlayer==='esp'?'fra':'esp');
+}
+
+function terrainBonus(unit,defending){
+  const t=terrain[unit.row][unit.col];
+  if(t===T.CITY||t===T.HOUSE)return 1;
+  if(t===T.MOUNTAIN&&defending&&INF_TYPES.includes(unit.type))return 1;
+  return 0;
+}
+
+// ─── ROSTER ───────────────────────────────────────────────
+function buildRoster(){
+  ['esp','fra'].forEach(side=>{
+    const cont=document.getElementById(`${side}-list`);
+    ALL[side].forEach(group=>{
+      const lbl=document.createElement('div');lbl.className='unit-type-label';
+      lbl.textContent=TLABELS[group.type];cont.appendChild(lbl);
+      group.units.forEach(([name,combat,move])=>{
+        const id=idCounter++;
+        const def={id,side,type:group.type,name,combat,move,isMando:group.type==='mando'};
+        const btn=document.createElement('button');btn.className='unit-btn';btn.id=`ud-${id}`;
+        btn.innerHTML=`<div class="unit-dot ${side}"></div><span>${name}</span><span class="unit-stats">${combat}-${move}</span>`;
+        btn.onclick=()=>{
+          selectedRoster=def;selectedPlaced=null;combatAttackers=[];reachable=[];
+          setMode('place');
+          document.querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('selected-unit'));
+          btn.classList.add('selected-unit');
+          setInfo(`${name} · Combate:${combat} Mov:${move} · Clic en el tablero.`);
+          drawBoard();
+        };
+        cont.appendChild(btn);
+      });
+    });
+  });
+}
+
+// ─── CANVAS CLICK ─────────────────────────────────────────
+canvas.addEventListener('click',e=>{
+  if(gameOver)return;
+  const rect=canvas.getBoundingClientRect();
+  const hit=pixelToHexZoomed(e.clientX-rect.left,e.clientY-rect.top);
+  if(!hit)return;
+  const[c,r]=hit;
+
+  if(mode==='place'){
+    if(!selectedRoster){setInfo('Selecciona una unidad del panel izquierdo.');return;}
+    if(placedUnits.some(u=>u.col===c&&u.row===r)){setInfo('Hexágono ocupado.');return;}
+    // During setup, restrict to own zone and active side
+    if(gamePhase==='setup'&&placementPhase!=='done'){
+      if(selectedRoster.side!==placementPhase){
+        setInfo(`Ahora es el turno de colocación de ${placementPhase==='esp'?'España':'Francia'}.`);return;
+      }
+      if(placementPhase==='fra'&&r>14){
+        setInfo('Francia debe colocar sus fichas en la mitad norte del tablero (por encima de la línea azul).');return;
+      }
+      if(placementPhase==='esp'&&r<14){
+        setInfo('España debe colocar sus fichas en la mitad sur del tablero (por debajo de la línea roja).');return;
+      }
+    }
+    placedUnits.push({...selectedRoster,col:c,row:r,movedThisTurn:false,actedThisTurn:false});
+    if(selectedRoster.isMando) mandosPlaced[selectedRoster.side]++;
+    document.getElementById(`ud-${selectedRoster.id}`)?.classList.add('placed');
+    setInfo(`${selectedRoster.name} colocada.`);
+    selectedRoster=null;
+    document.querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('selected-unit'));
+
+  }else if(mode==='move'){
+    const found=placedUnits.find(u=>u.col===c&&u.row===r);
+    if(!selectedPlaced){
+      if(!found){setInfo('Clic sobre una unidad para moverla.');return;}
+      if(found.movedThisTurn){setInfo(`${found.name} ya se movió este turno.`);return;}
+      selectedPlaced=found;
+      movementLeft=found.move;
+      // bonus camino se aplica si empieza en camino
+      reachable=reachableHexes(found.col,found.row,movementLeft,found.side);
+      setInfo(`${found.name} seleccionada. Puntos de mov: ${movementLeft}. Clic en un hexágono adyacente.`);
+    }else{
+      // Clic en la misma unidad = confirmar posición y parar
+      if(c===selectedPlaced.col&&r===selectedPlaced.row){
+        selectedPlaced.movedThisTurn=true;
+        setInfo(`${selectedPlaced.name} se queda aquí.`);
+        selectedPlaced=null;reachable=[];drawBoard();return;
+      }
+      // Check it's adjacent
+      const isAdj=hexNeighbors(selectedPlaced.col,selectedPlaced.row).some(([nc,nr])=>nc===c&&nr===r);
+      if(!isAdj){setInfo('Solo puedes mover un hexágono a la vez. Clic en la misma unidad para parar.');drawBoard();return;}
+      // Check not occupied
+      if(placedUnits.some(u=>u!==selectedPlaced&&u.col===c&&u.row===r)){setInfo('Hexágono ocupado.');return;}
+      const cost=moveCost(c,r);
+      if(cost>movementLeft){setInfo(`Sin puntos de movimiento suficientes (necesitas ${cost}, te quedan ${movementLeft}).`);return;}
+      selectedPlaced.col=c;selectedPlaced.row=r;
+      movementLeft-=cost;
+      // Zona de control: si entra en ZoC enemiga, se detiene obligatoriamente
+      if(inEnemyZoC(c,r,selectedPlaced.side)){
+        selectedPlaced.movedThisTurn=true;
+        reachable=[];
+        setInfo(`${selectedPlaced.name} entra en zona de control enemiga y debe detenerse.`);
+        selectedPlaced=null;
+      }else{
+        reachable=reachableHexes(c,r,movementLeft,selectedPlaced.side);
+        if(movementLeft<=0){
+          selectedPlaced.movedThisTurn=true;
+          setInfo(`${selectedPlaced.name} se ha detenido (movimiento agotado).`);
+          selectedPlaced=null;reachable=[];
+        }else{
+          setInfo(`${selectedPlaced.name} · Mov. restante: ${movementLeft}. Sigue moviendo o clic en la unidad para parar.`);
+        }
+      }
+    }
+
+  }else if(mode==='combat'){
+    const found=placedUnits.find(u=>u.col===c&&u.row===r);
+    if(!found){
+      if(combatAttackers.length>0){setInfo('Clic en un enemigo adyacente para atacar, o en otro aliado para sumarlo.');} 
+      return;
+    }
+    if(combatAttackers.length===0){
+      combatAttackers=[found];updateAtk();
+      setInfo(`Atacante: ${found.name}. Clic en más aliados o en el defensor enemigo adyacente.`);
+    }else{
+      if(found.side===combatAttackers[0].side){
+        if(!combatAttackers.includes(found)){combatAttackers.push(found);updateAtk();}
+        setInfo(`Atacantes: ${combatAttackers.map(u=>u.name).join(', ')}. Ahora clic en defensor.`);
+      }else{
+        resolveCombat(combatAttackers,found);
+        combatAttackers=[];updateAtk();
+      }
+    }
+
+  }else if(mode==='bombard'){
+    const found=placedUnits.find(u=>u.col===c&&u.row===r);
+    if(!found)return;
+    if(combatAttackers.length===0){
+      if(found.type!=='art'&&found.type!=='artm'){setInfo('Solo artillería puede bombardear.');return;}
+      if(found.actedThisTurn){setInfo(`${found.name} ya ha actuado este turno (solo puede bombardear O combatir, no ambas).`);return;}
+      combatAttackers=[found];updateAtk();
+      setInfo(`${found.name} lista. Clic en objetivo enemigo (2-12 hexs).`);
+    }else{
+      if(found.side===combatAttackers[0].side){setInfo('El objetivo debe ser enemigo.');return;}
+      const dist=hexDist(combatAttackers[0].col,combatAttackers[0].row,found.col,found.row);
+      if(dist<2||dist>12){setInfo(`Distancia ${dist} fuera de rango (2-12).`);combatAttackers=[];updateAtk();return;}
+      resolveBombardment(combatAttackers[0],found,dist);
+      combatAttackers=[];updateAtk();
+    }
+
+  }else if(mode==='delete'){
+    const idx=placedUnits.findIndex(u=>u.col===c&&u.row===r);
+    if(idx>=0){
+      document.getElementById(`ud-${placedUnits[idx].id}`)?.classList.remove('placed');
+      setInfo(`${placedUnits[idx].name} eliminada.`);
+      placedUnits.splice(idx,1);
+    }
+  }
+  drawBoard();
+});
+
+// Click fuera del tablero o en hex vacío en modo mover = parar
+canvas.addEventListener('dblclick',e=>{
+  if(mode==='move'&&selectedPlaced){
+    selectedPlaced.movedThisTurn=true;
+    setInfo(`${selectedPlaced.name} se detiene aquí.`);
+    selectedPlaced=null;reachable=[];drawBoard();
+  }
+});
+
+// ─── COMBATE ─────────────────────────────────────────────
+function resolveCombat(attackers,defender){
+  const adj=attackers.every(a=>hexNeighbors(a.col,a.row).some(([c,r])=>c===defender.col&&r===defender.row));
+  if(!adj){setInfo('Los atacantes deben ser adyacentes al defensor.');return;}
+  // Artillería no puede combatir si ya bombardeó
+  const artBlocked=attackers.find(a=>(a.type==='art'||a.type==='artm')&&a.actedThisTurn);
+  if(artBlocked){setInfo(`${artBlocked.name} ya bombardeó este turno y no puede combatir directamente.`);return;}
+
+  const ad=rollDie(),dd=rollDie();
+  const atkTotal=attackers.reduce((s,u)=>s+u.combat+terrainBonus(u,false),0);
+  const defTotal=defender.combat+terrainBonus(defender,true);
+  const av=atkTotal*ad,dv=defTotal*dd;
+
+  drawDie('die-atk',ad);drawDie('die-def',dd);
+  document.getElementById('atk-label').textContent=`${attackers.map(u=>u.name).join('+')}`;
+  document.getElementById('def-label').textContent=defender.name;
+  document.getElementById('atk-calc').textContent=`${atkTotal}×${ad}=${av}`;
+  document.getElementById('def-calc').textContent=`${defTotal}×${dd}=${dv}`;
+
+  // Mark any artillery attackers as acted
+  attackers.forEach(a=>{if(a.type==='art'||a.type==='artm')a.actedThisTurn=true;});
+
+  let res;
+  if(av>dv){
+    res=`<span style="color:#ffaa44">¡VICTORIA ATACANTE!</span><br><b>${defender.name}</b> eliminada del juego.`;
+    removeUnit(defender);
+  }else if(dv>av){
+    const loser=attackers[0];
+    res=`<span style="color:#88aaff">¡VICTORIA DEFENSORA!</span><br><b>${loser.name}</b> sufre bajas y es eliminada.`;
+    removeUnit(loser);
+  }else{
+    res=`<span style="color:#dddd44">EMPATE</span> — Se repite la tirada automáticamente.`;
+    setTimeout(()=>resolveCombat(attackers.filter(u=>placedUnits.includes(u)),defender),1400);
+  }
+  document.getElementById('overlay-title').textContent='⚔ COMBATE';
+  document.getElementById('combat-result').innerHTML=res;
+  document.getElementById('combat-overlay').style.display='block';
+  drawBoard();
+}
+
+function resolveBombardment(art,target,dist){
+  const ter=terrain[target.row][target.col];
+  const die=rollDie();
+  const city=ter===T.CITY||ter===T.HOUSE;
+  let minNeeded;
+  if(dist<=4)minNeeded=city?3:3;
+  else if(dist<=8)minNeeded=city?3:4;
+  else{if(city){setInfo('Sin efecto en ciudad a esa distancia.');return;}minNeeded=5;}
+  const hit=die>=minNeeded;
+  const terN={[T.MOUNTAIN]:'monte',[T.CITY]:'ciudad',[T.HOUSE]:'casa',[T.PLAIN]:'llano',[T.ROAD]:'camino',[T.FOREST]:'vegetación'}[ter]||'llano';
+  const res=hit
+    ?`<span style="color:#ffaa44">¡IMPACTO!</span><br><b>${target.name}</b> destruida.`
+    :`<span style="color:#88aaff">Fallo.</span><br>${target.name} no resulta afectada.`;
+  if(hit)removeUnit(target);
+  art.actedThisTurn=true;
+
+  // Show single die
+  drawDie('die-atk',die);
+  document.getElementById('atk-label').textContent=`${art.name}`;
+  document.getElementById('def-label').textContent=`→ ${target.name}`;
+  drawDie('die-def',minNeeded);
+  document.getElementById('atk-calc').textContent=`Tirada: ${die}`;
+  document.getElementById('def-calc').textContent=`Necesario: ≥${minNeeded}`;
+  document.getElementById('overlay-title').textContent=`💣 BOMBARDEO · Dist:${dist} · ${terN}`;
+  document.getElementById('combat-result').innerHTML=res;
+  document.getElementById('combat-overlay').style.display='block';
+  drawBoard();
+}
+
+function removeUnit(u){
+  const i=placedUnits.indexOf(u);
+  if(i>=0){
+    document.getElementById(`ud-${u.id}`)?.classList.remove('placed');
+    placedUnits.splice(i,1);
+    setTimeout(checkVictoryAuto, 600); // pequeña pausa para que se vea el resultado del combate primero
+  }
+}
+function closeCombatOverlay(){document.getElementById('combat-overlay').style.display='none';}
+function updateAtk(){document.getElementById('combat-attackers').textContent=combatAttackers.length?`Atac.: ${combatAttackers.map(u=>u.name).join(', ')}`:''}
+
+// ─── DRAW ─────────────────────────────────────────────────
+function drawVectorCounter(ctx,u,cx,cy,W,H,x,y,isEsp){
+  const sym=isEsp?'#f5c800':'#ffffff';
+  ctx.fillStyle=isEsp?'#c0231e':'#1a4fa0';
+  ctx.fillRect(cx,cy,W,H);
+  if(u.movedThisTurn){ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(cx,cy,W,H);}
+  ctx.strokeStyle=sym;ctx.lineWidth=0.6;ctx.strokeRect(cx+1.5,cy+1.5,W-3,H-3);
+  const t=u.type, mid=H*0.52;
+  ctx.strokeStyle=sym;ctx.lineWidth=1.4;ctx.lineCap='round';
+  if(t==='mando'){
+    ctx.fillStyle=sym;
+    ctx.beginPath();ctx.moveTo(cx+W*0.35,cy+H*0.28);ctx.lineTo(cx+W*0.35,cy+H*0.78);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx+W*0.35,cy+H*0.28);ctx.lineTo(cx+W*0.7,cy+H*0.36);ctx.lineTo(cx+W*0.35,cy+H*0.48);ctx.closePath();ctx.fill();
+    ctx.font=`${W*0.2}px serif`;ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText('★',cx+W-2,cy+2);
+  }else if(t==='art'||t==='artm'){
+    ctx.fillStyle=sym;ctx.beginPath();ctx.arc(x,cy+mid,W*0.2,0,Math.PI*2);ctx.fill();
+  }else if(t==='cab'||t==='drag'||t==='cor'){
+    ctx.beginPath();ctx.moveTo(cx+W*0.2,cy+H*0.3);ctx.lineTo(cx+W*0.8,cy+H*0.75);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx+W*0.8,cy+H*0.3);ctx.lineTo(cx+W*0.2,cy+H*0.75);ctx.stroke();
+  }else{
+    ctx.beginPath();ctx.moveTo(cx+W*0.18,cy+H*0.28);ctx.lineTo(cx+W*0.82,cy+H*0.75);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx+W*0.82,cy+H*0.28);ctx.lineTo(cx+W*0.18,cy+H*0.75);ctx.stroke();
+    ctx.beginPath();ctx.arc(x,cy+mid,W*0.1,0,Math.PI*2);ctx.lineWidth=0.8;ctx.stroke();
+  }
+  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(cx,cy,W,H*0.2);
+  ctx.fillStyle=sym;ctx.font=`bold ${W*0.155}px 'IM Fell English',serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(u.name.length>8?u.name.substring(0,8):u.name,x,cy+H*0.1);
+  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(cx,cy+H*0.78,W,H*0.22);
+  ctx.fillStyle=sym;ctx.font=`bold ${W*0.2}px 'IM Fell English',serif`;
+  ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(u.combat,cx+W*0.08,cy+H*0.89);
+  ctx.textAlign='right';ctx.fillText(u.move,cx+W*0.92,cy+H*0.89);
+}
+
+function drawBoard(){
+  ctx.clearRect(0,0,cssW,cssH);
+
+  // Draw map image background
+  ctx.fillStyle='#e8d5a3';
+  ctx.fillRect(0,0,cssW,cssH);
+
+  // Draw hex grid overlay - transparent fill, just grid lines
+  for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){
+    const{x,y}=hexCenter(c,r);
+    drawHex(x,y,HEX_SIZE-0.5,'rgba(0,0,0,0)','rgba(40,20,0,0.3)');
+  }
+  // Reachable hexes highlight
+  if(selectedPlaced&&reachable.length){
+    reachable.forEach(([c,r])=>{
+      const{x,y}=hexCenter(c,r);
+      drawHex(x,y,HEX_SIZE-0.5,'rgba(60,100,220,0.25)','#6080ee',1);
+    });
+  }
+  // Adjacent to attackers
+  combatAttackers.forEach(u=>{const{x,y}=hexCenter(u.col,u.row);drawHex(x,y,HEX_SIZE-0.5,'rgba(255,100,0,0.2)','#ff6600');});
+
+  // Labels
+
+  ctx.font=`bold ${HEX_SIZE*.62}px 'Cinzel',serif`;ctx.textAlign='center';
+  ctx.textBaseline='top';ctx.fillStyle='rgba(120,180,255,0.9)';ctx.fillText('⬆ ZONA FRANCESA',cssW/2,5);
+  ctx.textBaseline='bottom';ctx.fillStyle='rgba(255,130,130,0.9)';ctx.fillText('⬇ ZONA ESPAÑOLA',cssW/2,cssH-3);
+
+  // ── Side panel: zone labels + arrows (right edge) ──
+  const panelX = cssW - 2;
+  const midY = hexCenter(0,14).y + HH/2; // division line Y
+
+  // French zone label (vertical, upper half)
+  ctx.save();
+  ctx.fillStyle = '#111';
+  ctx.font = `bold ${HEX_SIZE*0.62}px 'Cinzel',serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.translate(panelX - 6, midY/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('Zona Francesa', 0, 0);
+  ctx.restore();
+
+  // French arrow ←
+  ctx.save();
+  ctx.fillStyle = '#111';
+  ctx.font = `${HEX_SIZE*0.9}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('←', panelX - 6, midY/2 + HEX_SIZE*1.5);
+  ctx.restore();
+
+  // Spanish zone label (vertical, lower half)
+  ctx.save();
+  ctx.fillStyle = '#111';
+  ctx.font = `bold ${HEX_SIZE*0.62}px 'Cinzel',serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.translate(panelX - 6, midY + (cssH - midY)/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('Zona Española', 0, 0);
+  ctx.restore();
+
+  // Spanish arrow ←
+  ctx.save();
+  ctx.fillStyle = '#111';
+  ctx.font = `${HEX_SIZE*0.9}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('←', panelX - 6, midY + (cssH - midY)/2 + HEX_SIZE*1.5);
+  ctx.restore();
+
+  // Draw placement zone boundary lines
+  if(gamePhase==='setup'&&placementPhase!=='done'){
+    // French zone southern boundary (row 19)
+    const fraY = hexCenter(0,14).y + HH/2;
+    ctx.beginPath();ctx.moveTo(0,fraY);ctx.lineTo(cssW,fraY);
+    ctx.strokeStyle='rgba(100,150,255,0.6)';ctx.lineWidth=2;ctx.setLineDash([8,4]);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(100,150,255,0.8)';ctx.font=`bold ${HEX_SIZE*0.6}px 'Cinzel',serif`;
+    ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText('▲ ZONA FRANCESA',cssW/2,fraY-2);
+
+    // Spanish zone northern boundary (row 21)
+    const espY = hexCenter(0,14).y + HH/2;
+    ctx.beginPath();ctx.moveTo(0,espY);ctx.lineTo(cssW,espY);
+    ctx.strokeStyle='rgba(255,100,100,0.6)';ctx.lineWidth=2;ctx.setLineDash([8,4]);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,100,100,0.8)';ctx.font=`bold ${HEX_SIZE*0.6}px 'Cinzel',serif`;
+    ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText('▼ ZONA ESPAÑOLA',cssW/2,espY+2);
+  }
+
+  // Units - SVG-style vector counters matching Gemini design
+  placedUnits.forEach(u=>{
+    const{x,y}=hexCenter(u.col,u.row);
+    const sel=selectedPlaced===u||combatAttackers.includes(u);
+    const isEsp=u.side==='esp';
+    const W=HEX_SIZE*1.35, H=HEX_SIZE*1.35;
+    const cx=x-W/2, cy=y-H/2;
+
+    ctx.save();
+
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.4)';
+    ctx.fillRect(cx+2,cy+2,W,H);
+    const sym=isEsp?'#f5c800':'#ffffff';
+    const uImg = unitImages[u.name];
+    if(uImg && uImg.complete && uImg.naturalWidth > 0) {
+      ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+      ctx.drawImage(uImg, cx, cy, W, H);
+      if(u.movedThisTurn){ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(cx,cy,W,H);}
+    } else {
+      // Fallback vectorial
+      ctx.fillStyle=isEsp?'#c0231e':'#1a4fa0';
+      ctx.fillRect(cx,cy,W,H);
+
+    // Dimmed if moved
+    if(u.movedThisTurn){
+      ctx.fillStyle='rgba(0,0,0,0.3)';
+      ctx.fillRect(cx,cy,W,H);
+    }
+
+    // Thin inner border line (like original)
+    ctx.strokeStyle=isEsp?'rgba(255,200,0,0.5)':'rgba(255,255,255,0.4)';
+    ctx.lineWidth=0.6;
+    ctx.strokeRect(cx+1.5,cy+1.5,W-3,H-3);
+
+    const sym=isEsp?'#f5c800':'#ffffff';
+    const mid=H*0.52; // vertical center of symbol area
+
+    // Unit type symbol
+    ctx.strokeStyle=sym; ctx.lineWidth=1.4;
+    ctx.lineCap='round';
+
+    const t=u.type;
+    if(t==='mando'){
+      // Flag on pole (mando style from image)
+      ctx.fillStyle=sym;
+      // Pole
+      ctx.beginPath();ctx.moveTo(cx+W*0.35,cy+H*0.28);ctx.lineTo(cx+W*0.35,cy+H*0.78);ctx.stroke();
+      // Flag
+      ctx.beginPath();ctx.moveTo(cx+W*0.35,cy+H*0.28);ctx.lineTo(cx+W*0.7,cy+H*0.36);
+      ctx.lineTo(cx+W*0.35,cy+H*0.48);ctx.closePath();ctx.fill();
+      // Star for mando
+      ctx.fillStyle=sym;ctx.font=`${W*0.2}px serif`;
+      ctx.textAlign='right';ctx.textBaseline='top';
+      ctx.fillText('★',cx+W-2,cy+2);
+    } else if(t==='art'||t==='artm'){
+      // Cannonball symbol
+      ctx.fillStyle=sym;
+      ctx.beginPath();ctx.arc(x,cy+mid,W*0.2,0,Math.PI*2);ctx.fill();
+      // Small dots around
+      ctx.beginPath();ctx.arc(x-W*0.25,cy+mid+W*0.1,W*0.07,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(x+W*0.25,cy+mid+W*0.1,W*0.07,0,Math.PI*2);ctx.fill();
+    } else if(t==='cab'||t==='drag'||t==='cor'){
+      // Crossed sabers (cavalry)
+      ctx.strokeStyle=sym;ctx.lineWidth=1.6;
+      ctx.beginPath();ctx.moveTo(cx+W*0.2,cy+H*0.3);ctx.lineTo(cx+W*0.8,cy+H*0.75);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx+W*0.8,cy+H*0.3);ctx.lineTo(cx+W*0.2,cy+H*0.75);ctx.stroke();
+      // Hilt guards
+      ctx.beginPath();ctx.moveTo(cx+W*0.3,cy+H*0.35);ctx.lineTo(cx+W*0.48,cy+H*0.51);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx+W*0.7,cy+H*0.35);ctx.lineTo(cx+W*0.52,cy+H*0.51);ctx.stroke();
+    } else {
+      // Crossed muskets (infantry / milicias / guardia)
+      ctx.strokeStyle=sym;ctx.lineWidth=1.5;
+      // Main cross
+      ctx.beginPath();ctx.moveTo(cx+W*0.18,cy+H*0.28);ctx.lineTo(cx+W*0.82,cy+H*0.75);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx+W*0.82,cy+H*0.28);ctx.lineTo(cx+W*0.18,cy+H*0.75);ctx.stroke();
+      // Decorative rings at cross center
+      ctx.strokeStyle=sym;ctx.lineWidth=0.8;
+      ctx.beginPath();ctx.arc(x,cy+mid,W*0.1,0,Math.PI*2);ctx.stroke();
+      // Bayonet tips
+      if(t==='guardia'){
+        ctx.lineWidth=1.8; // thicker for guardia
+        ctx.beginPath();ctx.moveTo(cx+W*0.18,cy+H*0.28);ctx.lineTo(cx+W*0.82,cy+H*0.75);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(cx+W*0.82,cy+H*0.28);ctx.lineTo(cx+W*0.18,cy+H*0.75);ctx.stroke();
+      }
+    }
+
+    // Name strip at top
+    ctx.fillStyle=isEsp?'rgba(0,0,0,0.3)':'rgba(0,0,0,0.25)';
+    ctx.fillRect(cx,cy,W,H*0.2);
+    ctx.fillStyle=sym;
+    ctx.font=`bold ${W*0.155}px 'IM Fell English',serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(u.name.length>8?u.name.substring(0,8):u.name, x, cy+H*0.1);
+
+    // Stats bottom strip
+    ctx.fillStyle=isEsp?'rgba(0,0,0,0.3)':'rgba(0,0,0,0.25)';
+    ctx.fillRect(cx,cy+H*0.78,W,H*0.22);
+    ctx.fillStyle=sym;
+    ctx.font=`bold ${W*0.2}px 'IM Fell English',serif`;
+    ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(u.combat, cx+W*0.08, cy+H*0.89);
+    ctx.textAlign='right';
+    ctx.fillText(u.move, cx+W*0.92, cy+H*0.89);
+    // Separator dot in middle
+    ctx.textAlign='center';
+    ctx.fillText('·', x, cy+H*0.89);
+
+    } // fin else fallback
+    // Outer border
+    ctx.strokeStyle=sel?'#ffff00':(u.isMando?'#ffd700':sym);
+    ctx.lineWidth=sel?2.5:(u.isMando?1.8:1);
+    ctx.strokeRect(cx,cy,W,H);
+
+    ctx.restore();
+  });
+}
+
+// ─── CONTROLS ────────────────────────────────────────────
+function setMode(m){
+  mode=m;
+  if(m!=='place'){selectedRoster=null;document.querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('selected-unit'));}
+  if(m!=='move'){selectedPlaced=null;reachable=[];}
+  if(m!=='combat'&&m!=='bombard'){combatAttackers=[];updateAtk();}
+  const L={place:'Colocar',move:'Mover',combat:'Combate',bombard:'Bombardeo',delete:'Eliminar'};
+  document.getElementById('mode-txt').textContent=L[m]||m;
+  ['btn-place','btn-move','btn-combat','btn-bomb','btn-del'].forEach(id=>document.getElementById(id)?.classList.remove('active-btn'));
+  const map={place:'btn-place',move:'btn-move',combat:'btn-combat',bombard:'btn-bomb',delete:'btn-del'};
+  if(map[m])document.getElementById(map[m])?.classList.add('active-btn');
+  const H={place:'Selecciona unidad → clic en tablero.',move:'Clic en unidad → clic hex a hex. Clic en la misma para parar.',combat:'Clic en atacante(s) → clic en defensor adyacente.',bombard:'Clic en artillería → clic en objetivo (2-12 hexs).',delete:'Clic en unidad para eliminarla.'};
+  setInfo(H[m]||'');drawBoard();
+}
+
+// ─── PHASE SYSTEM ─────────────────────────────────────────
+function rollStart(side){
+  const val=rollDie();
+  startRolls[side]=val;
+  drawDie(side==='esp'?'die-esp-start':'die-fra-start',val);
+  document.getElementById(side+'-roll').textContent=val;
+  document.getElementById('btn-roll-'+side).disabled=true;
+  // Check if both rolled
+  if(startRolls.esp!==null&&startRolls.fra!==null){
+    const res=document.getElementById('startup-result');
+    if(startRolls.esp===startRolls.fra){
+      res.textContent='¡Empate! Volved a tirar.';
+      startRolls={esp:null,fra:null};
+      document.getElementById('btn-roll-esp').disabled=false;
+      document.getElementById('btn-roll-fra').disabled=false;
+      document.getElementById('esp-roll').textContent='—';
+      document.getElementById('fra-roll').textContent='—';
+    }else{
+      firstPlayer=startRolls.esp>startRolls.fra?'esp':'fra';
+      const winner=firstPlayer==='esp'?'🔴 España':'🔵 Francia';
+      res.textContent=`${winner} tiene el valor más alto y empieza.`;
+      document.getElementById('btn-start-game').style.display='block';
+    }
+  }
+}
+
+function startGame(){
+  document.getElementById('startup-overlay').style.display='none';
+  placementPhase='esp';
+  gamePhase='setup';
+  updatePhaseUI();
+  showHandover(
+    '🔴 TURNO DE ESPAÑA',
+    'España: colocad vuestras fichas en la zona sur del tablero.<br>Cuando terminéis, pulsad "Siguiente fase →" en el panel derecho.',
+    false
+  );
+}
+
+function showHandover(title, msg, autoHide){
+  document.getElementById('handover-title').textContent=title;
+  document.getElementById('handover-msg').innerHTML=msg;
+  document.getElementById('handover-overlay').style.display='flex';
+  if(autoHide){setTimeout(()=>{document.getElementById('handover-overlay').style.display='none';},2000);}
+}
+
+function handoverConfirm(){
+  document.getElementById('handover-overlay').style.display='none';
+}
+
+function nextPhase(){
+  if(gameOver)return;
+  selectedPlaced=null;reachable=[];combatAttackers=[];updateAtk();
+  if(gamePhase==='setup'){
+    if(placementPhase==='esp'){
+      // Spain done, hand over to France
+      placementPhase='fra';
+      showHandover(
+        '🔵 TURNO DE FRANCIA',
+        'Francia: colocad vuestras fichas en la zona norte del tablero.<br>Cuando terminéis, pulsad "Siguiente fase →".',
+        false
+      );
+      updatePhaseUI();
+      return;
+    } else if(placementPhase==='fra'){
+      // France done, start the game
+      placementPhase='done';
+      gamePhase='p1-bombard';
+      showHandover(
+        '⚔ ¡COMIENZA LA BATALLA!',
+        `${firstPlayer==='esp'?'🔴 España':'🔵 Francia'} ganó la tirada y empieza.<br>Preparad el tablero — ¡que comience Bailén!`,
+        false
+      );
+      updatePhaseUI();
+      return;
+    }
+  } else {
+    const idx=PHASE_ORDER.indexOf(gamePhase);
+    if(idx<PHASE_ORDER.length-1){
+      gamePhase=PHASE_ORDER[idx+1];
+    }else{
+      // End of full turn cycle
+      gamePhase='p1-bombard';
+      placedUnits.forEach(u=>{u.movedThisTurn=false;u.actedThisTurn=false;});
+      advanceTurnCounter();
+      checkVictoryAuto();
+    }
+  }
+  updatePhaseUI();
+  const m=PHASE_MODES[gamePhase]||'place';
+  setMode(m);
+}
+
+function advanceTurnCounter(){
+  if(currentTurn<12){
+    currentTurn++;
+    document.getElementById('cur-turn').textContent=currentTurn;
+    document.querySelectorAll('.tc').forEach((el,i)=>{
+      el.classList.remove('active','done');
+      if(i+1===currentTurn)el.classList.add('active');
+      else if(i+1<currentTurn)el.classList.add('done');
+    });
+  }
+}
+
+function updatePhaseUI(){
+  const bar=document.getElementById('phase-bar');
+  const playerEl=document.getElementById('phase-player');
+  const nameEl=document.getElementById('phase-name');
+  const panelInfo=document.getElementById('phase-panel-info');
+
+  // Show/hide mode buttons based on phase
+  const showMap={
+    'setup':['btn-place','btn-del'],
+    'p1-bombard':['btn-bomb'],
+    'p1-move':['btn-move'],
+    'p1-combat':['btn-combat'],
+    'p2-bombard':['btn-bomb'],
+    'p2-move':['btn-move'],
+    'p2-combat':['btn-combat'],
+  };
+  ['btn-place','btn-move','btn-combat','btn-bomb','btn-del'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display='none';
+  });
+  (showMap[gamePhase]||[]).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display='block';
+  });
+
+  if(gamePhase==='setup'){
+    bar.className=placementPhase==='fra'?'fra':'esp';
+    playerEl.textContent=placementPhase==='fra'?'🔵 FRANCIA — COLOCACIÓN':'🔴 ESPAÑA — COLOCACIÓN';
+    nameEl.textContent='';
+    panelInfo.textContent=placementPhase==='fra'
+      ? 'Francia: colocad fichas en la zona norte. Pulsad "Siguiente fase" cuando acabéis.'
+      : 'España: colocad fichas en la zona sur. Pulsad "Siguiente fase" cuando acabéis.';
+    return;
+  }
+
+  const player=phasePlayer(gamePhase);
+  const isEsp=player==='esp';
+  bar.className=isEsp?'esp':'fra';
+  const playerName=isEsp?'🔴 ESPAÑA':'🔵 FRANCIA';
+  playerEl.textContent=playerName;
+  nameEl.textContent=PHASE_LABELS[gamePhase]||'';
+
+  const hints={
+    'p1-bombard':'Selecciona tu artillería y bombardea objetivos enemigos.',
+    'p1-move':'Mueve tus unidades. Respeta la zona de control enemiga.',
+    'p1-combat':'Ataca con tus unidades a las enemigas adyacentes.',
+    'p2-bombard':'Selecciona tu artillería y bombardea objetivos enemigos.',
+    'p2-move':'Mueve tus unidades. Respeta la zona de control enemiga.',
+    'p2-combat':'Ataca con tus unidades a las enemigas adyacentes.',
+  };
+  panelInfo.textContent=hints[gamePhase]||'';
+}
+
+function advanceTurn(){
+  // Legacy - now handled by nextPhase
+  nextPhase();
+}
+
+function checkVictory(){
+  const e=placedUnits.filter(u=>u.side==='esp'),f=placedUnits.filter(u=>u.side==='fra');
+  const em=e.filter(u=>u.isMando).length,fm=f.filter(u=>u.isMando).length;
+  if(fm===0)setInfo('🇪🇸 VICTORIA ESPAÑOLA: Los 3 mandos franceses eliminados.');
+  else if(em===0)setInfo('🇫🇷 VICTORIA FRANCESA: Los 3 mandos españoles eliminados.');
+  else if(f.length>0&&e.length>=f.length*2)setInfo('🇪🇸 España puede exigir rendición (doble de fichas).');
+  else if(e.length>0&&f.length>=e.length*2)setInfo('🇫🇷 Francia puede exigir rendición (doble de fichas).');
+  else setInfo(`En juego — España: ${e.length} fichas (${em} mandos) · Francia: ${f.length} fichas (${fm} mandos).`);
+}
+function checkVictoryAuto(){
+  const e=placedUnits.filter(u=>u.side==='esp'),f=placedUnits.filter(u=>u.side==='fra');
+  const em=e.filter(u=>u.isMando).length,fm=f.filter(u=>u.isMando).length;
+  let title='',reason='';
+  if(mandosPlaced.fra>0&&fm===0){
+    title='🇪🇸 VICTORIA ESPAÑOLA';
+    reason='Los tres generales franceses han sido eliminados.<br>¡El ejército de Napoleón se rinde en Bailén!';
+  } else if(mandosPlaced.esp>0&&em===0){
+    title='🇫🇷 VICTOIRE FRANÇAISE';
+    reason='Los tres generales españoles han sido eliminados.<br>¡El ejército español no puede continuar la batalla!';
+  } else if(f.length>0&&e.length>=f.length*2){
+    title='🇪🇸 VICTORIA ESPAÑOLA';
+    reason=`España cuenta con el doble de fuerzas (${e.length} vs ${f.length}).<br>Francia se ve obligada a rendirse.`;
+  } else if(e.length>0&&f.length>=e.length*2){
+    title='🇫🇷 VICTOIRE FRANÇAISE';
+    reason=`Francia cuenta con el doble de fuerzas (${f.length} vs ${e.length}).<br>España se ve obligada a rendirse.`;
+  } else if(currentTurn>12){
+    if(e.length>f.length){
+      title='🇪🇸 VICTORIA PARCIAL ESPAÑOLA';
+      reason=`Turno 12 completado. España conserva más unidades (${e.length} vs ${f.length}).`;
+    } else if(f.length>e.length){
+      title='🇫🇷 VICTOIRE PARTIELLE FRANÇAISE';
+      reason=`Turno 12 completado. Francia conserva más unidades (${f.length} vs ${e.length}).`;
+    } else {
+      title='⚖ EMPATE';
+      reason=`Turno 12 completado. Ambos bandos conservan ${e.length} unidades.`;
+    }
+  }
+  if(title){
+    gameOver=true;
+    document.getElementById('victory-title').textContent=title;
+    document.getElementById('victory-reason').innerHTML=reason+'<br><br><span style="font-size:0.8em;color:#a07840">La partida ha concluido.</span>';
+    document.getElementById('victory-overlay').style.display='flex';
+  }
+}
+function setInfo(t){document.getElementById('info').textContent=t;}
+
+// ─── ZOOM ────────────────────────────────────────────────
+let zoomScale=1.0;
+const ZOOM_MIN=0.4, ZOOM_MAX=2.5, ZOOM_STEP=0.15;
+
+function applyZoom(){
+  canvas.style.transform=`scale(${zoomScale})`;
+  // Adjust wrap scroll area to match scaled canvas
+  const wrap=document.getElementById('board-wrap');
+  canvas.style.marginBottom = `${cssH*(zoomScale-1)}px`;
+  canvas.style.marginRight  = `${cssW*(zoomScale-1)}px`;
+  document.getElementById('zoom-level').textContent=Math.round(zoomScale*100)+'%';
+}
+function zoomIn(){zoomScale=Math.min(ZOOM_MAX,+(zoomScale+ZOOM_STEP).toFixed(2));applyZoom();}
+function zoomOut(){zoomScale=Math.max(ZOOM_MIN,+(zoomScale-ZOOM_STEP).toFixed(2));applyZoom();}
+function zoomReset(){zoomScale=1.0;applyZoom();}
+
+// Mouse wheel zoom on board
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('board-wrap').addEventListener('wheel',e=>{
+    e.preventDefault();
+    // Smooth zoom using actual delta value
+    const delta = e.deltaY || e.detail || e.wheelDelta;
+    const factor = e.ctrlKey ? 0.003 : 0.001; // pinch vs scroll
+    const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomScale - delta * factor));
+    zoomScale = Math.round(newScale * 100) / 100;
+    applyZoom();
+  },{passive:false});
+});
+
+// Adjust pixelToHex to account for zoom scale
+const _origPixelToHex=pixelToHex;
+function pixelToHexZoomed(px,py){
+  return _origPixelToHex(px/zoomScale, py/zoomScale);
+}
+
+// ─── PAN (WASD + arrows) ─────────────────────────────────
+const keysDown = {};
+let panVX = 0, panVY = 0;
+const PAN_ACCEL = 2.5, PAN_MAX = 18, PAN_FRICTION = 0.82;
+
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA') return;
+  keysDown[e.key.toLowerCase()] = true;
+  // Prevent page scroll with arrow keys
+  if(['arrowup','arrowdown','arrowleft','arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keysDown[e.key.toLowerCase()] = false; });
+
+function panLoop(){
+  const wrap = document.getElementById('board-wrap');
+  if(wrap){
+    if(keysDown['a']||keysDown['arrowleft'])  panVX -= PAN_ACCEL;
+    if(keysDown['d']||keysDown['arrowright']) panVX += PAN_ACCEL;
+    if(keysDown['w']||keysDown['arrowup'])    panVY -= PAN_ACCEL;
+    if(keysDown['s']||keysDown['arrowdown'])  panVY += PAN_ACCEL;
+    panVX = Math.max(-PAN_MAX, Math.min(PAN_MAX, panVX));
+    panVY = Math.max(-PAN_MAX, Math.min(PAN_MAX, panVY));
+    wrap.scrollLeft += panVX;
+    wrap.scrollTop  += panVY;
+    // Apply friction
+    if(!keysDown['a']&&!keysDown['d']&&!keysDown['arrowleft']&&!keysDown['arrowright']) panVX *= PAN_FRICTION;
+    if(!keysDown['w']&&!keysDown['s']&&!keysDown['arrowup']&&!keysDown['arrowdown'])    panVY *= PAN_FRICTION;
+    if(Math.abs(panVX)<0.1) panVX=0;
+    if(Math.abs(panVY)<0.1) panVY=0;
+  }
+  requestAnimationFrame(panLoop);
+}
+requestAnimationFrame(panLoop);
+
+// ─── INIT ────────────────────────────────────────────────
+buildRoster();
+const g=document.getElementById('turn-grid');
+for(let i=1;i<=12;i++){const d=document.createElement('div');d.className='tc'+(i===1?' active':'');d.textContent=i;g.appendChild(d);}
+// Start with startup overlay visible
+drawBoard();
+</script>
+</body>
+</html>
