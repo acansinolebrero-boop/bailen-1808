@@ -440,7 +440,7 @@ function preloadUnitImages() {
         const img = new Image();
         img.src = 'Fichas/' + folder + '/' + encodeURIComponent(toFileName(name, side)) + '.png';
         img.onerror = () => {};
-        unitImages[name] = img;
+        unitImages[side + ':' + name] = img;
       });
     });
   });
@@ -862,7 +862,7 @@ function drawBoard(){
     ctx.fillStyle='rgba(0,0,0,0.4)';
     ctx.fillRect(cx+2,cy+2,W,H);
     const sym=isEsp?'#f5c800':'#ffffff';
-    const uImg = unitImages[u.name];
+    const uImg = unitImages[u.side + ':' + u.name];
     if(uImg && uImg.complete && uImg.naturalWidth > 0) {
       ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
       ctx.drawImage(uImg, cx, cy, W, H);
