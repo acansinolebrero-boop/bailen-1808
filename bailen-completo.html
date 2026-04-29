@@ -430,7 +430,7 @@ function toFileName(name, side) {
       if (fname.startsWith(a)) { fname = fname.replace(a, f); break; }
     }
   }
-  return fname.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return side === 'fra' ? fname.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : fname;
 }
 function preloadUnitImages() {
   ['esp','fra'].forEach(side => {
