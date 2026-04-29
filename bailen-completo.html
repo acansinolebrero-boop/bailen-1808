@@ -501,7 +501,9 @@ function buildRoster(){
         const btn=document.createElement('button');btn.className='unit-btn';btn.id=`ud-${id}`;
         btn.innerHTML=`<div class="unit-dot ${side}"></div><span>${name}</span><span class="unit-stats">${combat}-${move}</span>`;
         btn.onclick=()=>{
-          selectedRoster=def;selectedPlaced=null;combatAttackers=[];reachable=[];
+          if(btn.classList.contains('placed'))return;
+        if(btn.classList.contains('placed'))return;
+        selectedRoster=def;selectedPlaced=null;combatAttackers=[];reachable=[];
           setMode('place');
           document.querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('selected-unit'));
           btn.classList.add('selected-unit');
