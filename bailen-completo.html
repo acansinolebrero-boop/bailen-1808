@@ -406,7 +406,7 @@ function toFileName(name, side) {
   const fraSpecial = {'2B.Suizo': '2 B. Suizo'};
   const fraAbbr = {
     'Pannet.': 'Pannetier', 'Ref.': 'Referencia',
-    'Cazad.': 'Cazadores', 'Art.Montada': 'Artilleria Montada',
+    'Cazad.': 'Cazadores', 'Art.Montada': 'Art. Montada',
     
   };
   let fname = name;
@@ -430,7 +430,7 @@ function toFileName(name, side) {
       if (fname.startsWith(a)) { fname = fname.replace(a, f); break; }
     }
   }
-  return fname;
+  return fname.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 function preloadUnitImages() {
   ['esp','fra'].forEach(side => {
