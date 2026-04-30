@@ -1195,10 +1195,7 @@ function setInfo(t){document.getElementById('info').textContent=t;}
 let zoomScale=1.0;
 const ZOOM_MIN=0.4, ZOOM_MAX=2.5, ZOOM_STEP=0.15;
 
-function applyZoom(originX, originY){
-  const ox = originX !== undefined ? originX : 50;
-  const oy = originY !== undefined ? originY : 50;
-  canvas.style.transformOrigin = `${ox}px ${oy}px`;
+function applyZoom(){
   canvas.style.transform=`scale(${zoomScale})`;
   // Adjust wrap scroll area to match scaled canvas
   const wrap=document.getElementById('board-wrap');
@@ -1219,8 +1216,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const factor = e.ctrlKey ? 0.003 : 0.001; // pinch vs scroll
     const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomScale - delta * factor));
     zoomScale = Math.round(newScale * 100) / 100;
-    const rect = canvas.getBoundingClientRect();
-    applyZoom(e.clientX - rect.left, e.clientY - rect.top);
+    applyZoom();
   },{passive:false});
 });
 
