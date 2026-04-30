@@ -1215,8 +1215,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     const delta = e.deltaY || e.detail || e.wheelDelta;
     const factor = e.ctrlKey ? 0.003 : 0.001; // pinch vs scroll
     const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomScale - delta * factor));
+    const wrap = document.getElementById('board-wrap');
+    const rect = wrap.getBoundingClientRect();
+    const mx = e.clientX - rect.left + wrap.scrollLeft;
+    const my = e.clientY - rect.top + wrap.scrollTop;
+    const oldScale = zoomScale;
     zoomScale = Math.round(newScale * 100) / 100;
     applyZoom();
+    wrap.scrollLeft = mx * (zoomScale / oldScale) - (e.clientX - rect.left);
+    wrap.scrollTop  = my * (zoomScale / oldScale) - (e.clientY - rect.top);
   },{passive:false});
 });
 
