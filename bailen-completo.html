@@ -731,7 +731,7 @@ function drawVectorCounter(ctx,u,cx,cy,W,H,x,y,isEsp){
   ctx.fillStyle=isEsp?'#c0231e':'#1a4fa0';
   ctx.fillRect(cx,cy,W,H);
   if(u.movedThisTurn){ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(cx,cy,W,H);}
-  ctx.strokeStyle=sym;ctx.lineWidth=0.6;ctx.strokeRect(cx+1.5,cy+1.5,W-3,H-3);
+  
   const t=u.type, mid=H*0.52;
   ctx.strokeStyle=sym;ctx.lineWidth=1.4;ctx.lineCap='round';
   if(t==='mando'){
