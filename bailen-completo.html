@@ -1194,18 +1194,21 @@ function setInfo(t){document.getElementById('info').textContent=t;}
 
 // ─── ZOOM ────────────────────────────────────────────────
 let zoomScale=1.0;
-const ZOOM_MIN=0.4, ZOOM_MAX=2.5, ZOOM_STEP=0.15;
+const ZOOM_MAX=2.5, ZOOM_STEP=0.15;
+
+function getZoomMin(){
+  const wrap=document.getElementById('board-wrap');
+  return Math.min(wrap.clientWidth/cssW, wrap.clientHeight/cssH);
+}
 
 function applyZoom(){
   canvas.style.transform=`scale(${zoomScale})`;
-  // Adjust wrap scroll area to match scaled canvas
-  const wrap=document.getElementById('board-wrap');
   canvas.style.marginBottom = `${cssH*(zoomScale-1)}px`;
   canvas.style.marginRight  = `${cssW*(zoomScale-1)}px`;
   document.getElementById('zoom-level').textContent=Math.round(zoomScale*100)+'%';
 }
 function zoomIn(){zoomScale=Math.min(ZOOM_MAX,+(zoomScale+ZOOM_STEP).toFixed(2));applyZoom();}
-function zoomOut(){zoomScale=Math.max(ZOOM_MIN,+(zoomScale-ZOOM_STEP).toFixed(2));applyZoom();}
+function zoomOut(){zoomScale=Math.max(getZoomMin(),+(zoomScale-ZOOM_STEP).toFixed(2));applyZoom();}
 function zoomReset(){zoomScale=1.0;applyZoom();}
 
 // Mouse wheel zoom on board
@@ -1220,7 +1223,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const delta = e.deltaY || e.detail || e.wheelDelta;
     const factor = e.ctrlKey ? 0.003 : 0.001; // pinch vs scroll
     const oldScale = zoomScale;
-    const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, oldScale - delta * factor));
+    const newScale = Math.min(ZOOM_MAX, Math.max(getZoomMin(), oldScale - delta * factor));
     if(newScale === oldScale) return;
     zoomScale = Math.round(newScale * 100) / 100;
 
