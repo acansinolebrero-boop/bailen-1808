@@ -763,8 +763,12 @@ function drawBoard(){
   ctx.clearRect(0,0,cssW,cssH);
 
   // Draw map image background
-  ctx.fillStyle='#e8d5a3';
-  ctx.fillRect(0,0,cssW,cssH);
+  if(window._mapaImg && window._mapaImg.complete){
+    ctx.drawImage(window._mapaImg,0,0,cssW,cssH);
+  } else {
+    ctx.fillStyle='#e8d5a3';
+    ctx.fillRect(0,0,cssW,cssH);
+  }
 
   // Draw hex grid overlay - transparent fill, just grid lines
   for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){
@@ -1267,6 +1271,11 @@ const g=document.getElementById('turn-grid');
 for(let i=1;i<=12;i++){const d=document.createElement('div');d.className='tc'+(i===1?' active':'');d.textContent=i;g.appendChild(d);}
 // Start with startup overlay visible
 drawBoard();
+</script>
+<script>
+window._mapaImg = new Image();
+window._mapaImg.src = 'mapa-bailen.svg';
+window._mapaImg.onload = () => drawBoard();
 </script>
 </body>
 </html>
