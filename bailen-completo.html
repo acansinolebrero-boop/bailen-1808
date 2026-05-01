@@ -174,6 +174,7 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
       <div class="leg"><div class="leg-c" style="background:rgba(200,140,40,0.7)"></div>Casa (+1 comb.)</div>
       <div class="leg"><div class="leg-c" style="background:#4060cc;opacity:0.7"></div>Hex alcanzable</div>
       <button class="btn" id="btn-show-terrain" onclick="toggleTerrain()" style="margin-top:6px">🗺 Ver terreno</button>
+      <button class="btn" onclick="exportTerrain()" style="margin-top:4px">💾 Exportar terreno</button>
     </div>
     <div class="panel">
       <h3>VICTORIA</h3>
@@ -1002,6 +1003,21 @@ function drawBoard(){
 }
 
 // ─── CONTROLS ────────────────────────────────────────────
+function exportTerrain(){
+  // Build compact representation: only non-plain, non-zone hexes
+  const TNAMES={[T.PLAIN]:'plain',[T.MOUNTAIN]:'mountain',[T.FOREST]:'forest',[T.ROAD]:'road',[T.CITY]:'city',[T.HOUSE]:'house',[T.ZONE_F]:'zone_f',[T.ZONE_E]:'zone_e'};
+  const hexes=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const t=terrain[r][c];
+    if(t!==T.PLAIN&&t!==T.ZONE_F&&t!==T.ZONE_E)hexes.push({col:c,row:r,type:TNAMES[t]});
+  }
+  const data=JSON.stringify({cols:COLS,rows:ROWS,terrain:hexes},null,2);
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(data);
+  a.download='terreno-bailen.json';
+  a.click();
+}
+
 function toggleTerrain(){
   showTerrain=!showTerrain;
   const btn=document.getElementById('btn-show-terrain');
