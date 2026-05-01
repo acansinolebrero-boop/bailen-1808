@@ -614,6 +614,7 @@ canvas.addEventListener('click',e=>{
     if(!found)return;
     if(combatAttackers.length===0){
       if(found.type!=='art'&&found.type!=='artm'){setInfo('Solo artillería puede bombardear.');return;}
+      if(found.side!==phasePlayer(gamePhase)){setInfo('Esa artillería no es tuya.');return;}
       if(found.actedThisTurn){setInfo(`${found.name} ya ha actuado este turno (solo puede bombardear O combatir, no ambas).`);return;}
       combatAttackers=[found];updateAtk();
       setInfo(`${found.name} lista. Clic en objetivo enemigo (2-12 hexs).`);
@@ -1042,6 +1043,7 @@ function nextPhase(){
         false
       );
       updatePhaseUI();
+      setMode(PHASE_MODES[gamePhase]||'place');
       return;
     } else if(placementPhase==='fra'){
       // France done, start the game
@@ -1053,6 +1055,7 @@ function nextPhase(){
         false
       );
       updatePhaseUI();
+      setMode(PHASE_MODES[gamePhase]||'place');
       return;
     }
   } else {
