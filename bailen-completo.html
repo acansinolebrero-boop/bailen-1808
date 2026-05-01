@@ -175,6 +175,7 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
       <div class="leg"><div class="leg-c" style="background:#4060cc;opacity:0.7"></div>Hex alcanzable</div>
       <button class="btn" id="btn-show-terrain" onclick="toggleTerrain()" style="margin-top:6px">🗺 Ver terreno</button>
       <button class="btn" onclick="exportTerrain()" style="margin-top:4px">💾 Exportar terreno</button>
+      <label class="btn" style="margin-top:4px;display:block;text-align:left;cursor:pointer">📂 Importar terreno<input type="file" accept=".json" style="display:none" onchange="importTerrain(this)"></label>
     </div>
     <div class="panel">
       <h3>VICTORIA</h3>
@@ -1003,6 +1004,33 @@ function drawBoard(){
 }
 
 // ─── CONTROLS ────────────────────────────────────────────
+function importTerrain(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      const TTYPES={plain:T.PLAIN,mountain:T.MOUNTAIN,forest:T.FOREST,road:T.ROAD,city:T.CITY,house:T.HOUSE,zone_f:T.ZONE_F,zone_e:T.ZONE_E};
+      // Reset to default zones
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+        terrain[r][c]=r<4?T.ZONE_F:r>=ROWS-4?T.ZONE_E:T.PLAIN;
+      }
+      let loaded=0;
+      for(const h of data.terrain){
+        const t=TTYPES[h.type];
+        if(t!==undefined&&h.row>=0&&h.row<ROWS&&h.col>=0&&h.col<COLS){
+          terrain[h.row][h.col]=t;loaded++;
+        }
+      }
+      setInfo(`Terreno importado: ${loaded} hexes.`);
+      drawBoard();
+    }catch(err){setInfo('Error al leer el JSON: '+err.message);}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
 function exportTerrain(){
   // Build compact representation: only non-plain, non-zone hexes
   const TNAMES={[T.PLAIN]:'plain',[T.MOUNTAIN]:'mountain',[T.FOREST]:'forest',[T.ROAD]:'road',[T.CITY]:'city',[T.HOUSE]:'house',[T.ZONE_F]:'zone_f',[T.ZONE_E]:'zone_e'};
