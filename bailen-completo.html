@@ -1049,6 +1049,7 @@ function nextPhase(){
       // France done, start the game
       placementPhase='done';
       gamePhase='p1-bombard';
+      document.getElementById('roster').style.display='none';
       showHandover(
         '⚔ ¡COMIENZA LA BATALLA!',
         `${firstPlayer==='esp'?'🔴 España':'🔵 Francia'} ganó la tirada y empieza.<br>Preparad el tablero — ¡que comience Bailén!`,
