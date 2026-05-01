@@ -863,9 +863,6 @@ function drawBoard(){
 
     ctx.save();
 
-    // Shadow
-    ctx.fillStyle='rgba(0,0,0,0.4)';
-    ctx.fillRect(cx+2,cy+2,W,H);
     const sym=isEsp?'#f5c800':'#ffffff';
     const uImg = unitImages[u.side + ':' + u.name];
     if(uImg && uImg.complete && uImg.naturalWidth > 0) {
