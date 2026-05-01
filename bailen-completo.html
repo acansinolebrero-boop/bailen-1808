@@ -1208,12 +1208,27 @@ function zoomReset(){zoomScale=1.0;applyZoom();}
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('board-wrap').addEventListener('wheel',e=>{
     e.preventDefault();
-    // Smooth zoom using actual delta value
+    const wrap = e.currentTarget;
+    const rect = wrap.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
     const delta = e.deltaY || e.detail || e.wheelDelta;
     const factor = e.ctrlKey ? 0.003 : 0.001; // pinch vs scroll
-    const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomScale - delta * factor));
+    const oldScale = zoomScale;
+    const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, oldScale - delta * factor));
+    if(newScale === oldScale) return;
     zoomScale = Math.round(newScale * 100) / 100;
+
+    // Canvas point under cursor before zoom
+    const canvasX = (wrap.scrollLeft + mouseX) / oldScale;
+    const canvasY = (wrap.scrollTop  + mouseY) / oldScale;
+
     applyZoom();
+
+    // Restore scroll so the same canvas point stays under cursor
+    wrap.scrollLeft = canvasX * zoomScale - mouseX;
+    wrap.scrollTop  = canvasY * zoomScale - mouseY;
   },{passive:false});
 });
 
