@@ -597,10 +597,13 @@ canvas.addEventListener('click',e=>{
       return;
     }
     if(combatAttackers.length===0){
+      if(found.side!==phasePlayer(gamePhase)){setInfo('Esa unidad no es tuya.');return;}
+      if(found.actedThisTurn){setInfo(`${found.name} ya atacó este turno.`);return;}
       combatAttackers=[found];updateAtk();
       setInfo(`Atacante: ${found.name}. Clic en más aliados o en el defensor enemigo adyacente.`);
     }else{
       if(found.side===combatAttackers[0].side){
+        if(found.actedThisTurn){setInfo(`${found.name} ya atacó este turno.`);return;}
         if(!combatAttackers.includes(found)){combatAttackers.push(found);updateAtk();}
         setInfo(`Atacantes: ${combatAttackers.map(u=>u.name).join(', ')}. Ahora clic en defensor.`);
       }else{
@@ -665,8 +668,7 @@ function resolveCombat(attackers,defender){
   document.getElementById('atk-calc').textContent=`${atkTotal}×${ad}=${av}`;
   document.getElementById('def-calc').textContent=`${defTotal}×${dd}=${dv}`;
 
-  // Mark any artillery attackers as acted
-  attackers.forEach(a=>{if(a.type==='art'||a.type==='artm')a.actedThisTurn=true;});
+  attackers.forEach(a=>a.actedThisTurn=true);
 
   let res;
   if(av>dv){
