@@ -731,7 +731,6 @@ function drawVectorCounter(ctx,u,cx,cy,W,H,x,y,isEsp){
   ctx.fillStyle=isEsp?'#c0231e':'#1a4fa0';
   ctx.fillRect(cx,cy,W,H);
   if(u.movedThisTurn){ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(cx,cy,W,H);}
-  ctx.strokeStyle=sym;ctx.lineWidth=0.6;ctx.strokeRect(cx+1.5,cy+1.5,W-3,H-3);
   const t=u.type, mid=H*0.52;
   ctx.strokeStyle=sym;ctx.lineWidth=1.4;ctx.lineCap='round';
   if(t==='mando'){
@@ -884,11 +883,6 @@ function drawBoard(){
       ctx.fillRect(cx,cy,W,H);
     }
 
-    // Thin inner border line (like original)
-    ctx.strokeStyle=isEsp?'rgba(255,200,0,0.5)':'rgba(255,255,255,0.4)';
-    ctx.lineWidth=0.6;
-    ctx.strokeRect(cx+1.5,cy+1.5,W-3,H-3);
-
     const sym=isEsp?'#f5c800':'#ffffff';
     const mid=H*0.52; // vertical center of symbol area
 
@@ -963,10 +957,13 @@ function drawBoard(){
     ctx.fillText('·', x, cy+H*0.89);
 
     } // fin else fallback
-    // Outer border
-    ctx.strokeStyle=sel?'#ffff00':(u.isMando?'#ffd700':sym);
-    ctx.lineWidth=sel?2.5:(u.isMando?1.8:1);
-    ctx.strokeRect(cx,cy,W,H);
+
+    // Outer border only when selected
+    if(sel){
+      ctx.strokeStyle='#ffff00';
+      ctx.lineWidth=2.5;
+      ctx.strokeRect(cx,cy,W,H);
+    }
 
     ctx.restore();
   });
