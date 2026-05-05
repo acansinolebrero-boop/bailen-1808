@@ -8,12 +8,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#1a0f00;color:#e8d5a3;font-family:'IM Fell English',serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-#header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;background:linear-gradient(180deg,#2a1500,#1a0f00);border-bottom:2px solid #8b6914;flex-shrink:0;}
-#header-title{text-align:center;flex:1;}
+#header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;background:linear-gradient(180deg,#2a1500,#1a0f00);border-bottom:2px solid #8b6914;flex-shrink:0;position:relative;}
+#header-title{text-align:center;position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;}
 h1{font-family:'Cinzel',serif;font-size:1.4em;color:#d4a017;letter-spacing:4px;}
 .subtitle{font-size:0.7em;color:#a07840;letter-spacing:2px;}
 #header-left{display:flex;align-items:center;gap:8px;flex-shrink:0;min-width:200px;justify-content:flex-start;padding-left:14px;}
-#header-placement-player{font-family:'Cinzel',serif;font-size:0.78em;font-weight:bold;white-space:nowrap;}
 #header-placement-btns{display:flex;gap:5px;}
 #header-placement-btns .btn{width:auto;padding:4px 8px;margin-top:0;font-size:0.72em;}
 #header-placement-area{display:none;align-items:center;gap:8px;}
@@ -31,14 +30,31 @@ h1{font-family:'Cinzel',serif;font-size:1.4em;color:#d4a017;letter-spacing:4px;}
 #rules-dropdown th{background:#2a1500;color:#d4a017;}#rules-dropdown td{background:#1a0f00;}
 .rules-leg{display:flex;align-items:center;gap:5px;margin:2px 0;font-size:0.66em;color:#a07840;}
 .rules-leg-c{width:14px;height:11px;border:1px solid rgba(255,255,255,0.12);border-radius:1px;flex-shrink:0;}
-#force-balance{display:flex;align-items:center;gap:6px;flex-shrink:0;background:#1e1000;border:1px solid #5a3800;border-radius:5px;padding:4px 10px;}
-.fb-side{display:flex;align-items:center;gap:4px;}
+#force-balance{display:flex;align-items:center;gap:10px;flex-shrink:0;background:#1e1000;border:1px solid #5a3800;border-radius:5px;padding:5px 12px;}
+.fb-col{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.fb-top{display:flex;align-items:center;gap:5px;}
 .fb-flag{font-size:0.75em;}
-.fb-count{font-family:'Cinzel',serif;font-size:0.9em;font-weight:bold;min-width:2ch;text-align:center;}
+.fb-count{font-family:'Cinzel',serif;font-size:0.92em;font-weight:bold;min-width:2ch;text-align:center;}
 .fb-esp .fb-count{color:#ff8888;}
 .fb-fra .fb-count{color:#88aaff;}
-.fb-sep{font-size:0.65em;color:#5a3800;padding:0 2px;}
-.fb-gen{font-size:0.68em;color:#a07840;margin-left:3px;white-space:nowrap;}
+.fb-gen-row{display:flex;align-items:center;gap:4px;}
+.fb-gen-label{font-size:0.58em;letter-spacing:1px;color:#7a5a30;font-family:'Cinzel',serif;text-transform:uppercase;}
+.fb-gen-num{font-family:'Cinzel',serif;font-size:0.85em;font-weight:bold;min-width:1.2ch;text-align:center;}
+.fb-esp .fb-gen-num{color:#ff8866;}
+.fb-fra .fb-gen-num{color:#88aaff;}
+.fb-stars{display:flex;gap:1px;align-items:center;}
+.fb-stars .star{font-size:0.9em;transition:color 0.3s,text-shadow 0.3s;}
+.fb-stars .star.alive-esp{color:#ff7744;text-shadow:0 0 6px rgba(255,100,50,0.6);}
+.fb-stars .star.alive-fra{color:#6699ff;text-shadow:0 0 6px rgba(80,130,255,0.6);}
+.fb-stars .star.dead{color:#2e1a08;}
+.fb-sep{font-size:0.65em;color:#5a3800;padding:0 2px;align-self:center;}
+#win-meter{display:flex;align-items:center;gap:7px;flex-shrink:0;background:#1a0e00;border:1px solid #5a3800;border-radius:5px;padding:4px 10px;min-width:140px;}
+#win-bar-wrap{width:72px;height:7px;background:linear-gradient(90deg,#2255aa,#3366cc);border-radius:4px;overflow:hidden;border:1px solid #3a2200;}
+#win-bar-esp{height:100%;background:linear-gradient(90deg,#cc4422,#ff7755);border-radius:4px 0 0 4px;transition:width 0.5s ease;}
+#win-label{font-family:'Cinzel',serif;font-size:0.7em;white-space:nowrap;letter-spacing:0.5px;}
+#win-label.adv-esp{color:#ff9977;}
+#win-label.adv-fra{color:#99bbff;}
+#win-label.adv-eq{color:#c8a060;}
 #header-right{display:flex;align-items:center;gap:12px;flex-shrink:0;min-width:200px;justify-content:flex-end;padding-right:28px;}
 #header-turn{font-family:'Cinzel',serif;font-size:0.88em;color:#c8a060;white-space:nowrap;letter-spacing:1px;background:#2a1800;border:1px solid #8b6914;border-radius:4px;padding:3px 10px;}
 #header-turn span{color:#f5c842;font-weight:bold;font-size:1.1em;}
@@ -98,6 +114,14 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
 #phase-bar.setup{background:#2a1800;color:#d4a017;}
 .phase-name{font-weight:bold;font-size:1.1em;}
 /* Startup overlay */
+/* Main menu screen */
+#main-menu-screen{position:fixed;top:0;left:0;width:100%;height:100%;z-index:299;display:flex;align-items:center;justify-content:center;background:#0a0500;padding-bottom:12vh;}
+#main-menu-bg{position:absolute;top:0;left:0;width:100%;height:100%;background:url('portada.jpeg') center/cover no-repeat;opacity:0.55;}
+#main-menu-content{position:relative;z-index:1;text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px;}
+#main-menu-title-block{padding:12px 0 8px;margin-bottom:6px;text-align:center;}
+.menu-btn{font-family:'Cinzel',serif;font-size:0.95em;letter-spacing:3px;padding:14px 44px;background:transparent;border:2px solid #d4a017;color:#d4a017;cursor:pointer;transition:background 0.25s,color 0.25s,box-shadow 0.25s;text-shadow:0 1px 6px #000;border-radius:2px;width:320px;display:block;}
+.menu-btn:hover{background:#d4a017;color:#1a0800;box-shadow:0 0 30px rgba(212,160,23,0.5);}
+#menu-pronto{display:none;font-family:'IM Fell English',serif;font-size:0.85em;color:#7a5a30;letter-spacing:2px;font-style:italic;margin-top:-6px;}
 #startup-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,5,0,0.95);z-index:200;display:flex;align-items:center;justify-content:center;}
 #startup-box{background:#2a1500;border:2px solid #d4a017;border-radius:8px;padding:30px;text-align:center;min-width:340px;}
 #startup-box h2{font-family:'Cinzel',serif;color:#d4a017;font-size:1.3em;margin-bottom:16px;letter-spacing:3px;}
@@ -112,8 +136,18 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
 <div id="header">
   <div id="header-left">
     <button class="btn" id="btn-rules" onclick="toggleRules()">📖 Reglas ▾</button>
+    <div id="force-balance">
+      <div class="fb-col fb-esp">
+        <div class="fb-top"><span class="fb-flag">🔴</span><span class="fb-count" id="fb-esp">—</span></div>
+        <div class="fb-gen-row"><span class="fb-gen-label">Gnl</span><span class="fb-stars" id="fb-stars-esp"></span></div>
+      </div>
+      <div class="fb-sep">vs</div>
+      <div class="fb-col fb-fra">
+        <div class="fb-top"><span class="fb-count" id="fb-fra">—</span><span class="fb-flag">🔵</span></div>
+        <div class="fb-gen-row"><span class="fb-stars" id="fb-stars-fra"></span><span class="fb-gen-label">Gnl</span></div>
+      </div>
+    </div>
     <div id="header-placement-area">
-      <div id="header-placement-player"></div>
       <div id="header-placement-btns">
         <button class="btn" id="btn-place"  onclick="setMode('place')">📌 Colocar</button>
         <button class="btn" id="btn-del"    onclick="setMode('delete')">🗑 Eliminar</button>
@@ -126,16 +160,15 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
       <button class="btn" id="btn-bomb"   onclick="setMode('bombard')" style="display:none">💣 Bombardeo</button>
     </div>
   </div>
-  <div id="force-balance">
-    <div class="fb-side fb-esp"><span class="fb-flag">🔴</span><span class="fb-count" id="fb-esp">—</span><span class="fb-gen" id="fb-gen-esp"></span></div>
-    <div class="fb-sep">vs</div>
-    <div class="fb-side fb-fra"><span class="fb-flag">🔵</span><span class="fb-count" id="fb-fra">—</span><span class="fb-gen" id="fb-gen-fra"></span></div>
-  </div>
   <div id="header-title">
     <h1>⚔ BAILÉN 1808 ⚔</h1>
     <div class="subtitle">19 de julio · Batalla de tablero</div>
   </div>
   <div id="header-right">
+    <div id="win-meter" style="display:none">
+      <div id="win-bar-wrap"><div id="win-bar-esp" style="width:50%"></div></div>
+      <span id="win-label" class="adv-eq">—</span>
+    </div>
     <div id="header-turn">Turno <span id="cur-turn-top">1</span>/12</div>
     <button class="btn" id="btn-next-phase-top" onclick="nextPhase()">Siguiente fase →</button>
   </div>
@@ -173,6 +206,22 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
   <p>· Eliminar los 3 mandos enemigos</p>
   <p>· O reunir el doble de fichas que el rival</p>
   <p>· En turno 12: el bando con más fichas gana</p>
+</div>
+
+<!-- Menú principal -->
+<div id="main-menu-screen">
+  <div id="main-menu-bg"></div>
+  <div id="main-menu-content">
+    <div id="main-menu-title-block">
+      <div style="font-family:'Cinzel',serif;font-size:clamp(4em,11vw,8em);font-weight:700;color:#f0c030;letter-spacing:10px;text-shadow:0 0 8px #000,0 0 18px #000,0 2px 2px #000,2px 2px 6px #000,-2px -2px 6px #000,0 0 60px rgba(212,160,23,0.55);line-height:1.05;opacity:0.78;">BAILÉN</div>
+      <div style="font-family:'Cinzel',serif;font-size:clamp(1.1em,3vw,1.9em);color:#c8a060;letter-spacing:6px;text-shadow:0 0 8px #000,0 2px 6px #000;font-weight:400;text-align:center;">1808</div>
+    </div>
+    <div style="width:220px;height:1px;background:linear-gradient(90deg,transparent,#8b6914,transparent);"></div>
+    <button class="menu-btn" onclick="window.open('intro.html','_blank')" style="margin-top:22vh;">INTRODUCCIÓN HISTÓRICA</button>
+    <button class="menu-btn" onclick="menuSettings()">AJUSTES</button>
+    <button class="menu-btn" onclick="menuPlay()">⚔ JUGAR ⚔</button>
+    <div id="menu-pronto">— próximamente —</div>
+  </div>
 </div>
 
 <!-- Startup overlay -->
@@ -1411,9 +1460,6 @@ function updatePhaseUI(){
       : 'España: colocad fichas en la zona sur. Pulsad "Siguiente fase" cuando acabéis.';
     document.getElementById('header-placement-area').style.display='flex';
     document.getElementById('header-mode-area').style.display='none';
-    const pp=document.getElementById('header-placement-player');
-    pp.textContent=placementPhase==='fra'?'🔵 FRANCIA':'🔴 ESPAÑA';
-    pp.style.color=placementPhase==='fra'?'#aaaaff':'#ffaaaa';
     return;
   }
   // Durante la partida: mostrar botones de modo
@@ -1493,10 +1539,34 @@ function updateBalance(){
   const fra=placedUnits.filter(u=>u.side==='fra');
   const em=esp.filter(u=>u.isMando).length;
   const fm=fra.filter(u=>u.isMando).length;
+
   document.getElementById('fb-esp').textContent=esp.length||'—';
   document.getElementById('fb-fra').textContent=fra.length||'—';
-  document.getElementById('fb-gen-esp').textContent=esp.length?`${em}G`:'';
-  document.getElementById('fb-gen-fra').textContent=fra.length?`${fm}G`:'';
+
+  // Estrellas de generales
+  function starsHTML(alive,total,side){
+    let h='';
+    for(let i=0;i<total;i++)h+=`<span class="star ${i<alive?'alive-'+side:'dead'}">★</span>`;
+    return h;
+  }
+  const espTotal=mandosPlaced.esp||3, fraTotal=mandosPlaced.fra||3;
+  document.getElementById('fb-stars-esp').innerHTML=esp.length?starsHTML(em,espTotal,'esp'):'';
+  document.getElementById('fb-stars-fra').innerHTML=fra.length?starsHTML(fm,fraTotal,'fra'):'';
+
+  // Porcentaje de ventaja
+  const wm=document.getElementById('win-meter');
+  if(!esp.length&&!fra.length){wm.style.display='none';return;}
+  wm.style.display='flex';
+  const espPow=esp.reduce((s,u)=>s+u.combat,0)+em*4;
+  const fraPow=fra.reduce((s,u)=>s+u.combat,0)+fm*4;
+  const total=espPow+fraPow;
+  const espPct=total>0?Math.round(espPow/total*100):50;
+  const fraPct=100-espPct;
+  document.getElementById('win-bar-esp').style.width=espPct+'%';
+  const lbl=document.getElementById('win-label');
+  if(espPct>fraPct+4){lbl.className='adv-esp';lbl.textContent=`ESP ${espPct}%`;}
+  else if(fraPct>espPct+4){lbl.className='adv-fra';lbl.textContent=`FRA ${fraPct}%`;}
+  else{lbl.className='adv-eq';lbl.textContent='Igualado';}
 }
 
 // ─── ZOOM ────────────────────────────────────────────────
@@ -1608,7 +1678,20 @@ requestAnimationFrame(panLoop);
 buildRoster();
 const g=document.getElementById('turn-grid');
 for(let i=1;i<=12;i++){const d=document.createElement('div');d.className='tc'+(i===1?' active':'');d.textContent=i;g.appendChild(d);}
-// Start with startup overlay visible
+// Portada visible; startup-overlay oculto hasta que el jugador pulse Empezar
+document.getElementById('startup-overlay').style.display='none';
+
+function menuPlay(){
+  document.getElementById('main-menu-screen').style.display='none';
+  document.getElementById('startup-overlay').style.display='flex';
+}
+
+function menuSettings(){
+  const el=document.getElementById('menu-pronto');
+  el.style.display='block';
+  setTimeout(()=>{ el.style.display='none'; },2200);
+}
+
 drawBoard();
 </script>
 <script>
