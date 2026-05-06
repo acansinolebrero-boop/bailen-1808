@@ -100,13 +100,60 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
 .die-label{font-size:0.75em;color:#a07840;}
 #combat-result{font-size:0.85em;line-height:1.6;margin:8px 0;}
 #info{padding:4px 10px;font-size:0.7em;color:#a07840;border-top:1px solid #8b6914;background:#1a0f00;flex-shrink:0;min-height:22px;}
-#victory-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:300;align-items:center;justify-content:center;}
 #handover-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:250;align-items:center;justify-content:center;flex-direction:column;}
 #handover-overlay h2{font-family:'Cinzel',serif;font-size:1.6em;color:#d4a017;letter-spacing:4px;margin-bottom:16px;}
 #handover-overlay p{font-size:0.9em;color:#a07840;margin-bottom:24px;text-align:center;line-height:1.7;}
-#victory-box{background:#2a1500;border:3px solid #d4a017;border-radius:10px;padding:40px;text-align:center;max-width:380px;}
-#victory-box h2{font-family:'Cinzel',serif;font-size:1.8em;color:#d4a017;margin-bottom:12px;letter-spacing:4px;}
-#victory-reason{font-size:0.9em;color:#e8d5a3;line-height:1.7;margin:12px 0;}
+/* Victory posters */
+.vict-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:300;align-items:center;justify-content:center;flex-direction:column;}
+#victory-esp{background:radial-gradient(ellipse at center,rgba(120,10,20,0.97) 0%,rgba(40,0,5,0.99) 100%);}
+#victory-fra{background:radial-gradient(ellipse at center,rgba(10,20,100,0.97) 0%,rgba(0,5,40,0.99) 100%);}
+#victory-draw{background:radial-gradient(ellipse at center,rgba(30,20,5,0.97) 0%,rgba(10,8,0,0.99) 100%);}
+.vict-poster{position:relative;display:flex;gap:0;max-width:820px;width:90%;border:3px solid;box-shadow:0 0 60px rgba(0,0,0,0.9),0 0 120px rgba(0,0,0,0.6);overflow:hidden;}
+#victory-esp .vict-poster{border-color:#c8860a;background:linear-gradient(135deg,#3a0008 0%,#1a0004 50%,#2a0008 100%);}
+#victory-fra .vict-poster{border-color:#4a6ac8;background:linear-gradient(135deg,#00083a 0%,#00041a 50%,#00082a 100%);}
+#victory-draw .vict-poster{border-color:#8b6914;background:linear-gradient(135deg,#1a1200 0%,#0a0800 100%);max-width:460px;flex-direction:column;align-items:center;padding:40px;}
+.vict-img-col{width:240px;flex-shrink:0;position:relative;overflow:hidden;}
+.vict-img-col img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;filter:sepia(0.85) contrast(1.15) brightness(0.92) grayscale(0.2);}
+.vict-img-overlay{position:absolute;top:0;left:0;right:0;bottom:0;}
+#victory-esp .vict-img-overlay{background:linear-gradient(to right,transparent 60%,#1a0004);}
+#victory-fra .vict-img-overlay{background:linear-gradient(to right,transparent 60%,#00041a);}
+.vict-text-col{flex:1;padding:36px 36px 28px;display:flex;flex-direction:column;gap:14px;justify-content:center;}
+.vict-eyebrow{font-family:'Cinzel',serif;font-size:0.58em;letter-spacing:5px;text-transform:uppercase;opacity:0.7;}
+#victory-esp .vict-eyebrow{color:#f0c060;}
+#victory-fra .vict-eyebrow{color:#aac0ff;}
+.vict-title{font-family:'Cinzel',serif;font-weight:900;line-height:1;letter-spacing:6px;text-transform:uppercase;}
+#victory-esp .vict-title{font-size:clamp(1.6em,4vw,2.6em);color:#f5d060;text-shadow:0 0 30px rgba(220,160,0,0.6),2px 2px 0 rgba(0,0,0,0.8);}
+#victory-fra .vict-title{font-size:clamp(1.6em,4vw,2.6em);color:#c0d4ff;text-shadow:0 0 30px rgba(100,140,255,0.6),2px 2px 0 rgba(0,0,0,0.8);}
+.vict-subtitle{font-family:'IM Fell English',serif;font-style:italic;font-size:1em;opacity:0.85;}
+#victory-esp .vict-subtitle{color:#f0c080;}
+#victory-fra .vict-subtitle{color:#a0b8f0;}
+.vict-divider{height:1px;opacity:0.3;}
+#victory-esp .vict-divider{background:linear-gradient(to right,#c8860a,transparent);}
+#victory-fra .vict-divider{background:linear-gradient(to right,#4a6ac8,transparent);}
+.vict-reason{font-family:'IM Fell English',serif;font-size:0.82em;line-height:1.75;}
+#victory-esp .vict-reason{color:#e8d5b0;}
+#victory-fra .vict-reason{color:#c0ccee;}
+.vict-quote{font-family:'IM Fell English',serif;font-style:italic;font-size:0.78em;opacity:0.65;line-height:1.6;border-left:2px solid;padding-left:12px;margin-top:4px;}
+#victory-esp .vict-quote{color:#f0c060;border-color:#c8860a;}
+#victory-fra .vict-quote{color:#aac0ff;border-color:#4a6ac8;}
+.vict-date{font-family:'Cinzel',serif;font-size:0.55em;letter-spacing:4px;opacity:0.45;text-transform:uppercase;margin-top:4px;}
+#victory-esp .vict-date{color:#f0c060;}
+#victory-fra .vict-date{color:#aac0ff;}
+#victory-draw .vict-title{font-size:1.8em;color:#d4a017;font-family:'Cinzel',serif;font-weight:900;letter-spacing:6px;text-align:center;}
+#victory-draw .vict-reason{color:#e8d5a3;font-family:'IM Fell English',serif;font-size:0.88em;text-align:center;line-height:1.7;margin:10px 0;}
+.vict-btn{font-family:'Cinzel',serif;font-size:0.72em;letter-spacing:3px;padding:10px 28px;cursor:pointer;border-radius:2px;margin-top:8px;transition:background 0.2s;}
+#victory-esp .vict-btn{background:rgba(200,134,10,0.15);border:1px solid #c8860a;color:#f5d060;}
+#victory-esp .vict-btn:hover{background:rgba(200,134,10,0.4);}
+#victory-fra .vict-btn{background:rgba(74,106,200,0.15);border:1px solid #4a6ac8;color:#c0d4ff;}
+#victory-fra .vict-btn:hover{background:rgba(74,106,200,0.4);}
+#victory-draw .vict-btn{background:rgba(139,105,20,0.2);border:1px solid #8b6914;color:#d4a017;}
+#victory-draw .vict-btn:hover{background:rgba(139,105,20,0.45);}
+.vict-seal{font-size:3.5em;opacity:0.12;position:absolute;bottom:16px;right:20px;line-height:1;}
+.vict-corner{position:absolute;width:32px;height:32px;}
+.vict-corner.tl{top:8px;left:8px;border-top:1px solid;border-left:1px solid;}
+.vict-corner.br{bottom:8px;right:8px;border-bottom:1px solid;border-right:1px solid;}
+#victory-esp .vict-corner{border-color:rgba(200,134,10,0.4);}
+#victory-fra .vict-corner{border-color:rgba(74,106,200,0.4);}
 /* Phase indicator */
 #phase-bar{padding:5px 10px;text-align:center;font-family:'Cinzel',serif;font-size:0.78em;letter-spacing:2px;flex-shrink:0;border-bottom:2px solid #8b6914;}
 #phase-bar.esp{background:#3a0a0a;color:#ffaaaa;}
@@ -305,11 +352,58 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
 </div>
 
 <!-- Victory overlay -->
-<div id="victory-overlay">
-  <div id="victory-box">
-    <h2 id="victory-title">VICTORIA</h2>
-    <div id="victory-reason"></div>
-    <button class="btn" style="width:auto;padding:8px 24px;margin-top:16px;font-size:0.9em" onclick="resetGame()">Nueva partida</button>
+<!-- Victoria Española -->
+<div id="victory-esp" class="vict-overlay">
+  <div class="vict-poster">
+    <div class="vict-corner tl"></div>
+    <div class="vict-corner br"></div>
+    <div class="vict-img-col">
+      <img src="castanos.jpg" alt="General Castaños"/>
+      <div class="vict-img-overlay"></div>
+    </div>
+    <div class="vict-text-col">
+      <div class="vict-eyebrow">Bailén · 19 de Julio de 1808</div>
+      <div class="vict-title">VICTORIA<br>ESPAÑOLA</div>
+      <div class="vict-subtitle">El ejército de Andalucía prevalece</div>
+      <div class="vict-divider"></div>
+      <div class="vict-reason" id="reason-esp"></div>
+      <div class="vict-quote">«Hoy es el día más glorioso de la Historia de España desde las Navas de Tolosa.»</div>
+      <div class="vict-date">Guerra de la Independencia · Andalucía 1808</div>
+      <button class="vict-btn" onclick="resetGame()">⚔ Nueva Partida</button>
+    </div>
+    <div class="vict-seal">🇪🇸</div>
+  </div>
+</div>
+
+<!-- Victoire Française -->
+<div id="victory-fra" class="vict-overlay">
+  <div class="vict-poster">
+    <div class="vict-corner tl"></div>
+    <div class="vict-corner br"></div>
+    <div class="vict-img-col">
+      <img src="dupont.jpg" alt="General Dupont"/>
+      <div class="vict-img-overlay"></div>
+    </div>
+    <div class="vict-text-col">
+      <div class="vict-eyebrow">Bailén · 19 Juillet 1808</div>
+      <div class="vict-title">VICTOIRE<br>FRANÇAISE</div>
+      <div class="vict-subtitle">La Grande Armée ouvre la route d'Andalousie</div>
+      <div class="vict-divider"></div>
+      <div class="vict-reason" id="reason-fra"></div>
+      <div class="vict-quote">«La gloire de la France s'étend jusqu'aux rives du Guadalquivir.»</div>
+      <div class="vict-date">Guerre d'Espagne · Andalousie 1808</div>
+      <button class="vict-btn" onclick="resetGame()">⚔ Nueva Partida</button>
+    </div>
+    <div class="vict-seal">🇫🇷</div>
+  </div>
+</div>
+
+<!-- Empate -->
+<div id="victory-draw" class="vict-overlay">
+  <div class="vict-poster">
+    <div class="vict-title">⚖ EMPATE</div>
+    <div class="vict-reason" id="reason-draw"></div>
+    <button class="vict-btn" onclick="resetGame()">⚔ Nueva Partida</button>
   </div>
 </div>
 
@@ -1309,7 +1403,9 @@ function startGame(){
 
 function resetGame(){
   // Ocultar overlays
-  document.getElementById('victory-overlay').style.display='none';
+  ['victory-esp','victory-fra','victory-draw'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
   document.getElementById('handover-overlay').style.display='none';
   document.getElementById('combat-overlay').style.display='none';
 
@@ -1528,9 +1624,18 @@ function checkVictoryAuto(){
   }
   if(title){
     gameOver=true;
-    document.getElementById('victory-title').textContent=title;
-    document.getElementById('victory-reason').innerHTML=reason+'<br><br><span style="font-size:0.8em;color:#a07840">La partida ha concluido.</span>';
-    document.getElementById('victory-overlay').style.display='flex';
+    const isEsp=title.includes('ESPAÑOLA')||title.includes('PARCIAL ESP');
+    const isFra=title.includes('FRANÇAISE')||title.includes('PARTIELLE');
+    if(isEsp){
+      document.getElementById('reason-esp').innerHTML=reason;
+      document.getElementById('victory-esp').style.display='flex';
+    } else if(isFra){
+      document.getElementById('reason-fra').innerHTML=reason;
+      document.getElementById('victory-fra').style.display='flex';
+    } else {
+      document.getElementById('reason-draw').innerHTML=reason;
+      document.getElementById('victory-draw').style.display='flex';
+    }
   }
 }
 function setInfo(t){document.getElementById('info').textContent=t;}
