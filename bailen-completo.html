@@ -475,6 +475,10 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
       <label>Silenciar todo</label>
       <button id="sett-mute-btn" class="sett-mute-btn" onclick="toggleMute()">SILENCIAR</button>
     </div>
+    <div class="sett-row" style="flex-direction:column;align-items:stretch;border-top:1px solid #5a4410;margin-top:14px;padding-top:14px;">
+      <label style="margin-bottom:8px;">Partidas guardadas</label>
+      <div id="save-slots"></div>
+    </div>
     <button class="menu-btn" onclick="closeSettings()" style="margin-top:20px;width:220px;">CERRAR</button>
   </div>
 </div>
@@ -2142,6 +2146,7 @@ function nextPhase(){
       gamePhase='p1-bombard';
       placedUnits.forEach(u=>{u.movedThisTurn=false;u.actedThisTurn=false;});
       advanceTurnCounter();
+      autoSave();
       checkVictoryAuto();
     }
   }
@@ -2546,6 +2551,193 @@ let _volMusic=0.30,_volSfx=0.60,_mute=false;
   _mute=g('bailen_mute','0')==='1';
 })();
 function _lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+// ─── GUARDADO / CARGA DE PARTIDA ──────────────────────────
+const SAVE_VERSION = 1;          // súbelo si cambias la estructura del estado
+const SAVE_SLOTS   = 3;
+
+function _serializeState(){
+  return {
+    version: SAVE_VERSION,
+    ts: Date.now(),
+    turn: currentTurn,
+    phase: gamePhase,
+    firstPlayer,
+    placementPhase,
+    startRolls: {esp:startRolls.esp, fra:startRolls.fra},
+    mandosPlaced: {esp:mandosPlaced.esp, fra:mandosPlaced.fra},
+    gameOver,
+    idCounter,
+    playerMode, humanSide, aiDifficulty,
+    units: placedUnits.map(u=>({
+      id:u.id, side:u.side, type:u.type, name:u.name,
+      combat:u.combat, move:u.move, isMando:u.isMando,
+      col:u.col, row:u.row,
+      movedThisTurn:!!u.movedThisTurn, actedThisTurn:!!u.actedThisTurn
+    }))
+  };
+}
+
+function saveGame(slot){
+  if(gamePhase==='setup'){ setInfo('Solo puedes guardar con la partida empezada.'); return false; }
+  try{ _lsSet('bailen_save_'+slot, JSON.stringify(_serializeState())); return true; }
+  catch(e){ setInfo('No se pudo guardar.'); return false; }
+}
+
+function autoSave(){
+  try{ _lsSet('bailen_save_auto', JSON.stringify(_serializeState())); }catch(e){}
+}
+
+function loadGame(slot){
+  let raw=null;
+  try{ raw=localStorage.getItem('bailen_save_'+slot); }catch(e){}
+  if(!raw){ setInfo('No hay partida en esa ranura.'); return false; }
+  let data;
+  try{ data=JSON.parse(raw); }catch(e){ setInfo('Guardado dañado.'); return false; }
+  if(!data || data.version!==SAVE_VERSION){
+    setInfo('Ese guardado es de otra versión y no se puede cargar.'); return false;
+  }
+  _applyState(data);
+  return true;
+}
+
+function _applyState(data){
+  // Ocultar overlays
+  ['victory-esp','victory-fra','victory-draw'].forEach(id=>{
+    const e=document.getElementById(id); if(e)e.style.display='none';
+  });
+  document.getElementById('handover-overlay').style.display='none';
+  document.getElementById('startup-overlay').style.display='none';
+  closeCombatOverlay(); dismissPhaseAnnounce();
+
+  // Limpiar transitorios
+  selectedRoster=null; selectedPlaced=null;
+  movementLeft=0; reachable=[]; hovHex=null;
+  combatAttackers=[]; bombardArt=null; bombardRangeAll=[]; bombardTargets=[]; bombardHovTarget=null;
+  aiPaused=false;
+
+  // Reconstruir roster (regenera allDefs + cartas con ids deterministas)
+  ['esp','fra'].forEach(side=>{ document.getElementById(side+'-list').innerHTML=''; });
+  allDefs.esp.length=0; allDefs.fra.length=0;
+  idCounter=0;
+  buildRoster();
+
+  // Volcar estado guardado
+  currentTurn     = data.turn;
+  gamePhase       = data.phase;
+  firstPlayer     = data.firstPlayer;
+  placementPhase  = data.placementPhase || 'done';
+  startRolls      = {esp:(data.startRolls&&data.startRolls.esp)??null, fra:(data.startRolls&&data.startRolls.fra)??null};
+  mandosPlaced.esp= (data.mandosPlaced&&data.mandosPlaced.esp)||0;
+  mandosPlaced.fra= (data.mandosPlaced&&data.mandosPlaced.fra)||0;
+  gameOver        = !!data.gameOver;
+  playerMode      = data.playerMode || 'hvh';
+  humanSide       = data.humanSide ?? null;
+  aiDifficulty    = data.aiDifficulty || 'general';
+  idCounter       = data.idCounter;     // restaurar DESPUÉS de buildRoster
+
+  // Cargar unidades
+  placedUnits.length=0;
+  data.units.forEach(u=>placedUnits.push({...u}));
+
+  // Marcar en el panel las cartas ya colocadas
+  placedUnits.forEach(u=>{ document.getElementById('ud-'+u.id)?.classList.add('placed'); });
+
+  // Partida en curso: ocultar panel de colocación
+  const bp=document.getElementById('bottom-placement-panel'); if(bp)bp.style.display='none';
+
+  // Contador de turno
+  document.getElementById('cur-turn').textContent=currentTurn;
+  document.getElementById('cur-turn-top').textContent=currentTurn;
+  document.querySelectorAll('.tc').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i+1===currentTurn)el.classList.add('active');
+    else if(i+1<currentTurn)el.classList.add('done');
+  });
+
+  // Música
+  const _mm=document.getElementById('menu-music'); if(_mm){_mm.pause();_mm.currentTime=0;}
+  startGameMusic();
+
+  // Refrescar UI y repintar
+  updatePhaseUI();
+  setMode(PHASE_MODES[gamePhase]||'place');
+  updateBalance();
+  bgDirty=true; drawBoard();
+  closeSettings();
+  setInfo('Partida cargada (turno '+currentTurn+').');
+
+  // Si al cargar le toca a la IA, retomarla
+  if(!gameOver && gamePhase!=='setup' && isAi(phasePlayer(gamePhase)) && !aiPaused){
+    setTimeout(runAiPhase, 800);
+  }
+}
+
+// ─── UI de slots en Ajustes ───────────────────────────────
+function _saveMeta(slot){
+  try{ const r=localStorage.getItem('bailen_save_'+slot); if(!r)return null;
+    const d=JSON.parse(r); return {turn:d.turn, ts:d.ts, name:d.name||null}; }catch(e){ return null; }
+}
+function _fmtDate(ts){
+  if(!ts)return ''; const d=new Date(ts);
+  return d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+function refreshSaveSlotsUI(){
+  const cont=document.getElementById('save-slots'); if(!cont)return;
+  let h='';
+  for(let s=1;s<=SAVE_SLOTS;s++){
+    const m=_saveMeta(s);
+    const empty=!m;
+    const nombre=m&&m.name ? m.name : ('Ranura '+s);
+    const info=m ? ('Turno '+m.turn+'  ·  '+_fmtDate(m.ts)) : 'Vacío';
+    const renBtn=m ? '<button onclick="renameSlot('+s+')" style="background:none;border:none;color:#7a6030;cursor:pointer;font-size:1em;padding:0 4px;line-height:1;" title="Renombrar">✎</button>' : '';
+    const loadStyle=empty ? 'opacity:0.35;cursor:not-allowed;' : '';
+    const loadClick=empty ? '' : 'uiLoadSlot('+s+')';
+    const loadDisabled=empty ? 'disabled' : '';
+    h+='<div style="background:rgba(0,0,0,0.3);border:1px solid #5a4410;border-radius:3px;padding:10px 12px;margin-bottom:8px;">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">'
+      +'<span style="font-size:0.82em;font-weight:700;color:#d4a017;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:85%;">'+nombre+'</span>'
+      +renBtn
+      +'</div>'
+      +'<div style="font-size:0.72em;color:#7a6a4a;margin-bottom:9px;">'+info+'</div>'
+      +'<div style="display:flex;gap:6px;">'
+      +'<button class="sett-mute-btn" style="flex:1;" onclick="uiSaveSlot('+s+')">Guardar</button>'
+      +'<button class="sett-mute-btn" style="flex:1;'+loadStyle+'" '+loadDisabled+' onclick="'+loadClick+'">Cargar</button>'
+      +'</div>'
+      +'</div>';
+  }
+  const a=_saveMeta('auto');
+  const ai=a ? ('Turno '+a.turn+'  ·  '+_fmtDate(a.ts)) : 'Vacío';
+  const aStyle=!a ? 'opacity:0.35;cursor:not-allowed;' : '';
+  const aClick=a ? "uiLoadSlot('auto')" : '';
+  const aDisabled=!a ? 'disabled' : '';
+  h+='<div style="background:rgba(0,0,0,0.2);border:1px dashed #5a4410;border-radius:3px;padding:8px 12px;">'
+    +'<div style="font-size:0.7em;color:#7a6a4a;letter-spacing:2px;margin-bottom:3px;">AUTOGUARDADO</div>'
+    +'<div style="font-size:0.72em;color:#5a5040;margin-bottom:8px;">'+ai+'</div>'
+    +'<button class="sett-mute-btn" style="width:100%;'+aStyle+'" '+aDisabled+' onclick="'+aClick+'">Cargar autoguardado</button>'
+    +'</div>';
+  cont.innerHTML=h;
+}
+function uiSaveSlot(s){
+  if(saveGame(s)){ setInfo('Guardado en ranura '+s+'.'); refreshSaveSlotsUI(); }
+}
+function uiLoadSlot(s){
+  if(confirm('¿Cargar esta partida? Perderás la partida actual sin guardar.')) loadGame(s);
+}
+function renameSlot(s){
+  const m=_saveMeta(s); if(!m)return;
+  const current=m.name||('Ranura '+s);
+  const nuevo=prompt('Nombre para este guardado (máx. 30 caracteres):',current);
+  if(nuevo===null||nuevo.trim()==='')return;
+  try{
+    const raw=localStorage.getItem('bailen_save_'+s);
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    data.name=nuevo.trim().slice(0,30);
+    _lsSet('bailen_save_'+s,JSON.stringify(data));
+    refreshSaveSlotsUI();
+  }catch(e){}
+}
 function applyAudioSettings(){
   const em=_mute?0:_volMusic,es=_mute?0:_volSfx;
   MUSIC_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.volume=em;});
@@ -2562,7 +2754,10 @@ function loadAudioSettings(){
 function onMusicVol(v){_volMusic=v/100;_lsSet('bailen_vol_music',_volMusic.toFixed(2));document.getElementById('sett-vol-music-val').textContent=v+'%';applyAudioSettings();}
 function onSfxVol(v){_volSfx=v/100;_lsSet('bailen_vol_sfx',_volSfx.toFixed(2));document.getElementById('sett-vol-sfx-val').textContent=v+'%';applyAudioSettings();}
 function toggleMute(){_mute=!_mute;_lsSet('bailen_mute',_mute?'1':'0');const mb=document.getElementById('sett-mute-btn');if(mb){mb.textContent=_mute?'ACTIVADO':'SILENCIAR';mb.classList.toggle('sett-active',_mute);}applyAudioSettings();}
-function openSettings(){document.getElementById('settings-overlay').style.display='flex';}
+function openSettings(){
+  refreshSaveSlotsUI();
+  document.getElementById('settings-overlay').style.display='flex';
+}
 function closeSettings(){document.getElementById('settings-overlay').style.display='none';}
 
 // ─── MÚSICA DE MENÚ ──────────────────────────────────────
