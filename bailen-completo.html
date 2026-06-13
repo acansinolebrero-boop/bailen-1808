@@ -193,6 +193,8 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
 /* ─── SUBMENÚ GUARDADO/CARGA ─────────────────────────────── */
 #pause-saves-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:310;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);}
 #pause-saves-box{background:#120c00;border:2px solid #8b6914;border-radius:8px;padding:28px 32px;min-width:320px;max-width:480px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 4px 40px rgba(0,0,0,0.95);}
+#play-menu-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:310;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);}
+#play-menu-box{background:#120c00;border:2px solid #8b6914;border-radius:8px;padding:28px 32px;min-width:320px;max-width:480px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 4px 40px rgba(0,0,0,0.95);}
 .ps-back{background:none;border:none;color:#8b6914;font-family:'Cinzel',serif;font-size:0.72em;letter-spacing:2px;cursor:pointer;padding:0 0 16px;display:block;}
 .ps-back:hover{color:#d4a017;}
 .ps-slot{border:1px solid #5a4010;border-radius:4px;padding:14px 16px;margin-bottom:10px;background:rgba(255,255,255,0.02);}
@@ -501,10 +503,6 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
       <label>Silenciar todo</label>
       <button id="sett-mute-btn" class="sett-mute-btn" onclick="toggleMute()">SILENCIAR</button>
     </div>
-    <div id="settings-load-section" style="display:none;border-top:1px solid #5a4410;margin-top:14px;padding-top:14px;">
-      <label class="sett-row" style="display:block;font-family:'Cinzel',serif;font-size:0.72em;color:#c9a84c;letter-spacing:2px;margin-bottom:12px;">Cargar partida</label>
-      <div id="settings-load-slots"></div>
-    </div>
     <button class="menu-btn" onclick="closeSettings()" style="margin-top:20px;width:220px;">CERRAR</button>
   </div>
 </div>
@@ -526,6 +524,16 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
     <button class="ps-back" onclick="closePauseSaves()">← VOLVER AL MENÚ</button>
     <p class="pause-title" style="font-size:1em;margin-bottom:20px;">PARTIDAS GUARDADAS</p>
     <div id="pause-save-list"></div>
+  </div>
+</div>
+
+<div id="play-menu-overlay" style="display:none;" onclick="closePlayMenu()">
+  <div id="play-menu-box" onclick="event.stopPropagation()">
+    <button class="ps-back" onclick="closePlayMenu()">← VOLVER AL MENÚ</button>
+    <p class="pause-title" style="font-size:1em;margin-bottom:20px;">JUGAR</p>
+    <button id="play-menu-continue" class="pause-btn" onclick="menuContinue()">CONTINUAR</button>
+    <button class="pause-btn" onclick="menuLoadSave()">CARGAR / GUARDAR PARTIDA</button>
+    <button class="pause-btn" onclick="menuNewGame()">NUEVA PARTIDA</button>
   </div>
 </div>
 
@@ -849,6 +857,7 @@ let gamePhase='setup';
 let firstPlayer='esp';
 let startRolls={esp:null,fra:null};
 let placementPhase='esp'; // 'esp' | 'fra' | 'done'
+let pauseSavesOrigin=null; // 'menu' | null
 
 const PHASE_ORDER=['p1-bombard','p1-move','p1-combat','p2-bombard','p2-move','p2-combat'];
 const PHASE_LABELS={
@@ -2796,31 +2805,7 @@ function renameSlot(s){
 }
 
 // ─── AJUSTES: CARGA DESDE MENÚ PRINCIPAL ─────────────────
-function _refreshSettingsLoadSlots(){
-  const cont=document.getElementById('settings-load-slots'); if(!cont)return;
-  let h='';
-  for(let s=1;s<=SAVE_SLOTS;s++){
-    const m=_saveMeta(s);
-    const nombre=m&&m.name?m.name:('Ranura '+s);
-    const info=m?('Turno '+m.turn+'  ·  '+_fmtDate(m.ts)):'Vacío';
-    h+='<div class="ps-slot">'
-      +'<div class="ps-slot-name">'+nombre+'</div>'
-      +'<div class="ps-slot-info">'+info+'</div>'
-      +'<div class="ps-slot-btns">'
-      +'<button '+(m?'':'disabled')+' onclick="settingsLoadSlot('+s+')">CARGAR</button>'
-      +'</div></div>';
-  }
-  const a=_saveMeta('auto');
-  if(a){
-    h+='<div class="ps-slot ps-slot-auto">'
-      +'<div class="ps-slot-name">AUTOGUARDADO</div>'
-      +'<div class="ps-slot-info">Turno '+a.turn+'  ·  '+_fmtDate(a.ts)+'</div>'
-      +'<div class="ps-slot-btns">'
-      +'<button onclick="settingsLoadSlot(\'auto\')">CARGAR</button>'
-      +'</div></div>';
-  }
-  cont.innerHTML=h;
-}
+
 function settingsLoadSlot(s){
   if(!confirm('¿Cargar esta partida?'))return;
   closeSettings();
@@ -2840,7 +2825,12 @@ function openPauseSaves(){
 }
 function closePauseSaves(){
   document.getElementById('pause-saves-overlay').style.display='none';
-  document.getElementById('pause-overlay').style.display='flex';
+  if(pauseSavesOrigin==='menu'){
+    pauseSavesOrigin=null;
+    document.getElementById('play-menu-overlay').style.display='flex';
+  } else {
+    document.getElementById('pause-overlay').style.display='flex';
+  }
 }
 function openPauseSettings(){
   openSettings(); // se abre encima (z-index 350 > pause 300)
@@ -2868,7 +2858,7 @@ function refreshPauseSaveList(){
       +'<div class="ps-slot-name">'+nombre+'</div>'
       +'<div class="ps-slot-info">'+info+'</div>'
       +'<div class="ps-slot-btns">'
-      +'<button onclick="pauseSaveSlot('+s+')">GUARDAR</button>'
+      +'<button '+(gamePhase==='setup'?'disabled':'')+' onclick="pauseSaveSlot('+s+')">GUARDAR</button>'
       +'<button '+loadDis+' onclick="pauseLoadSlot('+s+')">CARGAR</button>'
       +(m?'<button onclick="pauseRenameSlot('+s+')">✎</button>':'')
       +'</div>'
@@ -2911,15 +2901,6 @@ function onMusicVol(v){_volMusic=v/100;_lsSet('bailen_vol_music',_volMusic.toFix
 function onSfxVol(v){_volSfx=v/100;_lsSet('bailen_vol_sfx',_volSfx.toFixed(2));document.getElementById('sett-vol-sfx-val').textContent=v+'%';applyAudioSettings();}
 function toggleMute(){_mute=!_mute;_lsSet('bailen_mute',_mute?'1':'0');const mb=document.getElementById('sett-mute-btn');if(mb){mb.textContent=_mute?'ACTIVADO':'SILENCIAR';mb.classList.toggle('sett-active',_mute);}applyAudioSettings();}
 function openSettings(){
-  const ls=document.getElementById('settings-load-section');
-  if(ls){
-    if(gamePhase==='setup'){
-      ls.style.display='block';
-      _refreshSettingsLoadSlots();
-    } else {
-      ls.style.display='none';
-    }
-  }
   document.getElementById('settings-overlay').style.display='flex';
 }
 function closeSettings(){document.getElementById('settings-overlay').style.display='none';}
@@ -2951,8 +2932,28 @@ loadAudioSettings();
 
 function menuPlay(){
   document.getElementById('main-menu-screen').style.display='none';
+  const cont=document.getElementById('play-menu-continue');
+  if(cont) cont.disabled=!localStorage.getItem('bailen_save_auto');
+  document.getElementById('play-menu-overlay').style.display='flex';
+}
+function closePlayMenu(){
+  document.getElementById('play-menu-overlay').style.display='none';
+  document.getElementById('main-menu-screen').style.display='flex';
+}
+function menuNewGame(){
+  document.getElementById('play-menu-overlay').style.display='none';
   showStartupStep(1);
   document.getElementById('startup-overlay').style.display='flex';
+}
+function menuContinue(){
+  document.getElementById('play-menu-overlay').style.display='none';
+  loadGame('auto');
+}
+function menuLoadSave(){
+  document.getElementById('play-menu-overlay').style.display='none';
+  pauseSavesOrigin='menu';
+  refreshPauseSaveList();
+  document.getElementById('pause-saves-overlay').style.display='flex';
 }
 
 function menuSettings(){
