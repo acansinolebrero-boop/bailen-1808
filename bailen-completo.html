@@ -2841,6 +2841,8 @@ function pauseExitToMenu(){
   closePauseSaves();
   closeSettings();
   resetGame();
+  document.getElementById('startup-overlay').style.display='none';
+  document.getElementById('main-menu-screen').style.display='flex';
 }
 function pauseRenameSlot(s){
   renameSlot(s);
