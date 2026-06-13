@@ -2882,7 +2882,6 @@ function pauseSaveSlot(s){
   if(saveGame(s)){ setInfo('Guardado en ranura '+s+'.'); refreshPauseSaveList(); }
 }
 function pauseLoadSlot(s){
-  if(!confirm('¿Cargar esta partida? Perderás la partida actual sin guardar.'))return;
   closePauseSaves();
   closePause();
   loadGame(s);
