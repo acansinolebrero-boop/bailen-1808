@@ -179,6 +179,31 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
 .sett-box{position:relative;}
 .sett-close-btn{position:absolute;top:10px;right:12px;background:transparent;border:none;color:#8b6914;font-size:1.3em;cursor:pointer;padding:4px 8px;line-height:1;font-family:sans-serif;}
 .sett-close-btn:hover{color:#d4a017;}
+/* ─── BOTÓN MENÚ EN HUD ─────────────────────────────────── */
+#btn-menu{width:auto;padding:4px 10px;margin-top:0;font-size:0.72em;background:#1e1800;border-color:#8b6914;color:#d4a017;flex-shrink:0;}
+#btn-menu:hover{background:#3a2a00;}
+/* ─── MENÚ DE PAUSA (ESC) ───────────────────────────────── */
+#pause-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:300;align-items:center;justify-content:center;background:rgba(0,0,0,0.82);}
+#pause-box{background:#120c00;border:2px solid #8b6914;border-radius:8px;padding:36px 40px;min-width:300px;max-width:360px;width:88%;text-align:center;box-shadow:0 4px 40px rgba(0,0,0,0.95);}
+.pause-title{font-family:'Cinzel',serif;font-size:1.3em;color:#d4a017;letter-spacing:5px;margin:0 0 28px;text-align:center;}
+.pause-btn{display:block;width:100%;margin-bottom:12px;padding:13px 10px;font-family:'Cinzel',serif;font-size:0.9em;letter-spacing:3px;background:#1e1400;border:1px solid #8b6914;color:#d4a017;border-radius:3px;cursor:pointer;transition:background 0.15s,color 0.15s;}
+.pause-btn:hover{background:#3a2a00;color:#f0c040;}
+.pause-btn.pause-btn-exit{border-color:#6a3030;color:#c06060;}
+.pause-btn.pause-btn-exit:hover{background:#3a1010;color:#e08080;}
+/* ─── SUBMENÚ GUARDADO/CARGA ─────────────────────────────── */
+#pause-saves-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:310;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);}
+#pause-saves-box{background:#120c00;border:2px solid #8b6914;border-radius:8px;padding:28px 32px;min-width:320px;max-width:480px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 4px 40px rgba(0,0,0,0.95);}
+.ps-back{background:none;border:none;color:#8b6914;font-family:'Cinzel',serif;font-size:0.72em;letter-spacing:2px;cursor:pointer;padding:0 0 16px;display:block;}
+.ps-back:hover{color:#d4a017;}
+.ps-slot{border:1px solid #5a4010;border-radius:4px;padding:14px 16px;margin-bottom:10px;background:rgba(255,255,255,0.02);}
+.ps-slot-name{font-family:'Cinzel',serif;font-size:1em;color:#d4a017;letter-spacing:1px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ps-slot-info{font-family:'Share Tech Mono',monospace;font-size:0.68em;color:#7a6040;margin-bottom:10px;}
+.ps-slot-btns{display:flex;gap:8px;}
+.ps-slot-btns button{flex:1;padding:8px 4px;font-family:'Cinzel',serif;font-size:0.72em;letter-spacing:2px;background:#1e1400;border:1px solid #8b6914;color:#c9a84c;border-radius:2px;cursor:pointer;}
+.ps-slot-btns button:hover{background:#3a2a00;color:#f0c040;}
+.ps-slot-btns button:disabled{opacity:0.3;cursor:not-allowed;}
+.ps-slot-auto{border-style:dashed;border-color:#4a3a10;}
+.ps-slot-auto .ps-slot-name{color:#8a7040;font-size:0.78em;letter-spacing:3px;}
 </style>
 </head>
 <body>
@@ -186,6 +211,7 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
   <div id="header-left">
     <button class="btn" id="btn-rules" onclick="toggleRules()">📖 Reglas ▾</button>
     <button class="btn" id="btn-settings" onclick="openSettings()" title="Ajustes · Audio y volumen">⚙ Ajustes</button>
+    <button class="btn" id="btn-menu" onclick="openPause()">☰ Menú</button>
     <div id="force-balance">
       <div class="fb-col fb-esp">
         <div class="fb-top"><span class="fb-flag">🔴</span><span class="fb-count" id="fb-esp">—</span></div>
@@ -475,11 +501,31 @@ th{background:#2a1500;color:#d4a017;}td{background:#1a0f00;}
       <label>Silenciar todo</label>
       <button id="sett-mute-btn" class="sett-mute-btn" onclick="toggleMute()">SILENCIAR</button>
     </div>
-    <div class="sett-row" style="flex-direction:column;align-items:stretch;border-top:1px solid #5a4410;margin-top:14px;padding-top:14px;">
-      <label style="margin-bottom:8px;">Partidas guardadas</label>
-      <div id="save-slots"></div>
+    <div id="settings-load-section" style="display:none;border-top:1px solid #5a4410;margin-top:14px;padding-top:14px;">
+      <label class="sett-row" style="display:block;font-family:'Cinzel',serif;font-size:0.72em;color:#c9a84c;letter-spacing:2px;margin-bottom:12px;">Cargar partida</label>
+      <div id="settings-load-slots"></div>
     </div>
     <button class="menu-btn" onclick="closeSettings()" style="margin-top:20px;width:220px;">CERRAR</button>
+  </div>
+</div>
+
+<!-- MENÚ DE PAUSA (ESC) -->
+<div id="pause-overlay" onclick="closePause()">
+  <div id="pause-box" onclick="event.stopPropagation()">
+    <p class="pause-title">⏸ PAUSA</p>
+    <button class="pause-btn" onclick="closePause()">▶ CONTINUAR</button>
+    <button class="pause-btn" onclick="openPauseSaves()">💾 GUARDAR / CARGAR</button>
+    <button class="pause-btn" onclick="openPauseSettings()">⚙ AJUSTES</button>
+    <button class="pause-btn pause-btn-exit" onclick="pauseExitToMenu()">↩ MENÚ PRINCIPAL</button>
+  </div>
+</div>
+
+<!-- SUBMENÚ GUARDADO/CARGA (desde pausa) -->
+<div id="pause-saves-overlay" onclick="closePauseSaves()">
+  <div id="pause-saves-box" onclick="event.stopPropagation()">
+    <button class="ps-back" onclick="closePauseSaves()">← VOLVER AL MENÚ</button>
+    <p class="pause-title" style="font-size:1em;margin-bottom:20px;">PARTIDAS GUARDADAS</p>
+    <div id="pause-save-list"></div>
   </div>
 </div>
 
@@ -2503,6 +2549,15 @@ document.addEventListener('keydown', e => {
   const tag = document.activeElement.tagName;
   if(tag==='INPUT'||tag==='TEXTAREA') return;
   keysDown[e.key.toLowerCase()] = true;
+  // ESC: gestión del menú de pausa
+  if(e.key==='Escape'){
+    const psv=document.getElementById('pause-saves-overlay');
+    const pov=document.getElementById('pause-overlay');
+    if(psv&&psv.style.display==='flex'){ closePauseSaves(); return; }
+    if(pov&&pov.style.display==='flex'){ closePause(); return; }
+    if(gamePhase!=='setup'&&!gameOver) openPause();
+    return;
+  }
   // Prevent page scroll with arrow keys
   if(['arrowup','arrowdown','arrowleft','arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
 });
@@ -2608,6 +2663,7 @@ function _applyState(data){
   });
   document.getElementById('handover-overlay').style.display='none';
   document.getElementById('startup-overlay').style.display='none';
+  const mm=document.getElementById('main-menu-screen'); if(mm)mm.style.display='none';
   closeCombatOverlay(); dismissPhaseAnnounce();
 
   // Limpiar transitorios
@@ -2738,6 +2794,106 @@ function renameSlot(s){
     refreshSaveSlotsUI();
   }catch(e){}
 }
+
+// ─── AJUSTES: CARGA DESDE MENÚ PRINCIPAL ─────────────────
+function _refreshSettingsLoadSlots(){
+  const cont=document.getElementById('settings-load-slots'); if(!cont)return;
+  let h='';
+  for(let s=1;s<=SAVE_SLOTS;s++){
+    const m=_saveMeta(s);
+    const nombre=m&&m.name?m.name:('Ranura '+s);
+    const info=m?('Turno '+m.turn+'  ·  '+_fmtDate(m.ts)):'Vacío';
+    h+='<div class="ps-slot">'
+      +'<div class="ps-slot-name">'+nombre+'</div>'
+      +'<div class="ps-slot-info">'+info+'</div>'
+      +'<div class="ps-slot-btns">'
+      +'<button '+(m?'':'disabled')+' onclick="settingsLoadSlot('+s+')">CARGAR</button>'
+      +'</div></div>';
+  }
+  const a=_saveMeta('auto');
+  if(a){
+    h+='<div class="ps-slot ps-slot-auto">'
+      +'<div class="ps-slot-name">AUTOGUARDADO</div>'
+      +'<div class="ps-slot-info">Turno '+a.turn+'  ·  '+_fmtDate(a.ts)+'</div>'
+      +'<div class="ps-slot-btns">'
+      +'<button onclick="settingsLoadSlot(\'auto\')">CARGAR</button>'
+      +'</div></div>';
+  }
+  cont.innerHTML=h;
+}
+function settingsLoadSlot(s){
+  if(!confirm('¿Cargar esta partida?'))return;
+  closeSettings();
+  loadGame(s);
+}
+// ─── MENÚ DE PAUSA (ESC) ─────────────────────────────────
+function openPause(){
+  document.getElementById('pause-overlay').style.display='flex';
+}
+function closePause(){
+  document.getElementById('pause-overlay').style.display='none';
+}
+function openPauseSaves(){
+  refreshPauseSaveList();
+  document.getElementById('pause-overlay').style.display='none';
+  document.getElementById('pause-saves-overlay').style.display='flex';
+}
+function closePauseSaves(){
+  document.getElementById('pause-saves-overlay').style.display='none';
+  document.getElementById('pause-overlay').style.display='flex';
+}
+function openPauseSettings(){
+  openSettings(); // se abre encima (z-index 350 > pause 300)
+}
+function pauseExitToMenu(){
+  if(!confirm('¿Salir al menú principal? La partida actual se perderá si no la has guardado.'))return;
+  closePause();
+  closePauseSaves();
+  closeSettings();
+  resetGame();
+}
+function pauseRenameSlot(s){
+  renameSlot(s);
+  refreshPauseSaveList();
+}
+function refreshPauseSaveList(){
+  const cont=document.getElementById('pause-save-list'); if(!cont)return;
+  let h='';
+  for(let s=1;s<=SAVE_SLOTS;s++){
+    const m=_saveMeta(s);
+    const nombre=m&&m.name ? m.name : ('Ranura '+s);
+    const info=m ? ('Turno '+m.turn+'  ·  '+_fmtDate(m.ts)) : 'Vacío';
+    const loadDis=!m?'disabled':'';
+    h+='<div class="ps-slot">'
+      +'<div class="ps-slot-name">'+nombre+'</div>'
+      +'<div class="ps-slot-info">'+info+'</div>'
+      +'<div class="ps-slot-btns">'
+      +'<button onclick="pauseSaveSlot('+s+')">GUARDAR</button>'
+      +'<button '+loadDis+' onclick="pauseLoadSlot('+s+')">CARGAR</button>'
+      +(m?'<button onclick="pauseRenameSlot('+s+')">✎</button>':'')
+      +'</div>'
+      +'</div>';
+  }
+  const a=_saveMeta('auto');
+  const ai=a?('Turno '+a.turn+'  ·  '+_fmtDate(a.ts)):'Vacío';
+  h+='<div class="ps-slot ps-slot-auto">'
+    +'<div class="ps-slot-name">AUTOGUARDADO</div>'
+    +'<div class="ps-slot-info">'+ai+'</div>'
+    +'<div class="ps-slot-btns">'
+    +'<button '+(a?'':'disabled')+' onclick="pauseLoadSlot(\'auto\')">CARGAR</button>'
+    +'</div>'
+    +'</div>';
+  cont.innerHTML=h;
+}
+function pauseSaveSlot(s){
+  if(saveGame(s)){ setInfo('Guardado en ranura '+s+'.'); refreshPauseSaveList(); }
+}
+function pauseLoadSlot(s){
+  if(!confirm('¿Cargar esta partida? Perderás la partida actual sin guardar.'))return;
+  closePauseSaves();
+  closePause();
+  loadGame(s);
+}
 function applyAudioSettings(){
   const em=_mute?0:_volMusic,es=_mute?0:_volSfx;
   MUSIC_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.volume=em;});
@@ -2755,7 +2911,15 @@ function onMusicVol(v){_volMusic=v/100;_lsSet('bailen_vol_music',_volMusic.toFix
 function onSfxVol(v){_volSfx=v/100;_lsSet('bailen_vol_sfx',_volSfx.toFixed(2));document.getElementById('sett-vol-sfx-val').textContent=v+'%';applyAudioSettings();}
 function toggleMute(){_mute=!_mute;_lsSet('bailen_mute',_mute?'1':'0');const mb=document.getElementById('sett-mute-btn');if(mb){mb.textContent=_mute?'ACTIVADO':'SILENCIAR';mb.classList.toggle('sett-active',_mute);}applyAudioSettings();}
 function openSettings(){
-  refreshSaveSlotsUI();
+  const ls=document.getElementById('settings-load-section');
+  if(ls){
+    if(gamePhase==='setup'){
+      ls.style.display='block';
+      _refreshSettingsLoadSlots();
+    } else {
+      ls.style.display='none';
+    }
+  }
   document.getElementById('settings-overlay').style.display='flex';
 }
 function closeSettings(){document.getElementById('settings-overlay').style.display='none';}
