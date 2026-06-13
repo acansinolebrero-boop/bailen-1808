@@ -2841,6 +2841,7 @@ function pauseExitToMenu(){
   closePauseSaves();
   closeSettings();
   resetGame();
+  document.getElementById('pause-overlay').style.display='none';
   document.getElementById('startup-overlay').style.display='none';
   document.getElementById('main-menu-screen').style.display='flex';
 }
